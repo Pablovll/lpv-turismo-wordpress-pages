@@ -1,0 +1,26 @@
+{
+  "site": "https://www.lpvturismo.com",
+  "css_source": "WordPress > Aparência > Personalizar > CSS adicional",
+  "pages": {
+    "pt": {
+      "home": {"id": 7, "url": "/"},
+      "passeios": {"id": 17, "url": "/passeios/"},
+      "outros_servicos": {"id": 18, "url": "/outros-servicos/"},
+      "quero_montar_meu_roteiro": {"id": 19, "url": "/quero-montar-meu-roteiro/"},
+      "mosaicos_do_rio": {"id": 84, "url": "/passeios/mosaicos-do-rio/"},
+      "floresta_da_tijuca": {"id": 85, "url": "/passeios/imersao-floresta-da-tijuca/"},
+      "rio_essencial": {"id": 86, "url": "/passeios/rio-essencial/"}
+    },
+    "es": {
+      "home": {"id": 20, "url": "/es/"},
+      "servicios": {"id": 205, "url": "/es/servicios/"},
+      "quiero_armar_mi_itinerario": {"id": 203, "url": "/es/quiero-armar-mi-itinerario/"},
+      "mosaicos_del_rio": {"id": 160, "url": "/es/mosaicos-del-rio/"},
+      "inmersion_floresta_da_tijuca": {"id": 194, "url": "/es/inmersion-floresta-da-tijuca/"},
+      "rio_esencial": {"id": 195, "url": "/es/rio-esencial/"}
+    },
+    "en": {
+      "home": {"id": 21, "url": "/en/", "status": "draft_empty"}
+    }
+  }
+}
