@@ -13,6 +13,7 @@
     },
     "es": {
       "home": {"id": 20, "url": "/es/"},
+      "paseos": {"id": 237, "url": "/es/paseos/"},
       "servicios": {"id": 205, "url": "/es/servicios/"},
       "quiero_armar_mi_itinerario": {"id": 203, "url": "/es/quiero-armar-mi-itinerario/"},
       "mosaicos_del_rio": {"id": 160, "url": "/es/mosaicos-del-rio/"},
@@ -20,7 +21,13 @@
       "rio_esencial": {"id": 195, "url": "/es/rio-esencial/"}
     },
     "en": {
-      "home": {"id": 21, "url": "/en/", "status": "draft_empty"}
+      "home": {"id": 21, "url": "/en/"},
+      "tours": {"id": 239, "url": "/en/tours/", "status": "draft"},
+      "services": {"id": 217, "url": "/en/services/", "status": "draft"},
+      "plan_my_itinerary": {"id": 218, "url": "/en/plan-my-itinerary/", "status": "draft"},
+      "mosaics_of_rio": {"id": 219, "url": "/en/mosaics-of-rio/", "status": "draft"},
+      "tijuca_forest_immersion": {"id": 220, "url": "/en/tijuca-forest-immersion/", "status": "draft"},
+      "rio_essential": {"id": 221, "url": "/en/rio-essential/", "status": "draft"}
     }
   }
 }
