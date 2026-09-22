@@ -11,6 +11,17 @@
 - Formulários devem usar `https://formsubmit.co/info@lpvturismo.com`.
 - Não usar `mailto:` para envio de formulário.
 
+## L&P Experiences
+
+- É uma vertical própria dentro do site LPV Turismo.
+- Não deve ser classificada como passeio.
+- Usar wrapper `.lp-experiences-page`.
+- Não alterar CSS ou imagens da landing LPV.
+- Paleta: Deep Navy `#0B1F33` e Mediterranean Sand `#D8C7A3`.
+- Criar primeiro a versão PT.
+- Só criar ES e EN depois da aprovação da versão PT.
+- A página deve funcionar como solução para business trips, missões profissionais e grupos.
+
 ## Tom
 
 PT: elegante, cultural, turístico, acolhedor.

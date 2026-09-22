@@ -1,0 +1,892 @@
+diff --git a/wordpress/plugins/lpv-language-seo/lpv-language-seo.php b/wordpress/plugins/lpv-language-seo/lpv-language-seo.php
+new file mode 100644
+--- /dev/null
++++ b/wordpress/plugins/lpv-language-seo/lpv-language-seo.php
+@@ -0,0 +1,127 @@
++<?php
++/**
++ * Plugin Name: LPV Language SEO
++ * Description: Page-specific language and published hreflang equivalents for LPV Turismo.
++ * Version: 1.0.0
++ * Requires at least: 6.2
++ * Requires PHP: 7.4
++ * Author: LPV Turismo
++ * License: GPL-2.0-or-later
++ */
++
++if ( ! defined( 'ABSPATH' ) ) {
++	exit;
++}
++
++/** Approved stage 4 groups. Navigation fallbacks are deliberately absent. */
++function lpv_language_seo_groups() {
++	return array(
++		'home' => array(
++			'pt-BR' => array( 'id' => 7, 'url' => 'https://lpvturismo.com/' ),
++			'es' => array( 'id' => 20, 'url' => 'https://lpvturismo.com/es/' ),
++			'en' => array( 'id' => 21, 'url' => 'https://lpvturismo.com/en/' ),
++		),
++		'tours' => array(
++			'pt-BR' => array( 'id' => 17, 'url' => 'https://lpvturismo.com/passeios/' ),
++			'es' => array( 'id' => 237, 'url' => 'https://lpvturismo.com/es/paseos/' ),
++			'en' => array( 'id' => 239, 'url' => 'https://lpvturismo.com/en/tours/' ),
++		),
++		'services' => array(
++			'pt-BR' => array( 'id' => 18, 'url' => 'https://lpvturismo.com/outros-servicos/' ),
++			'es' => array( 'id' => 205, 'url' => 'https://lpvturismo.com/es/servicios/' ),
++			'en' => array( 'id' => 217, 'url' => 'https://lpvturismo.com/en/services/' ),
++		),
++		'itinerary_form' => array(
++			'pt-BR' => array( 'id' => 19, 'url' => 'https://lpvturismo.com/quero-montar-meu-roteiro/' ),
++			'es' => array( 'id' => 203, 'url' => 'https://lpvturismo.com/es/quiero-armar-mi-itinerario/' ),
++			'en' => array( 'id' => 218, 'url' => 'https://lpvturismo.com/en/plan-my-itinerary/' ),
++		),
++		'mosaics' => array(
++			'pt-BR' => array( 'id' => 84, 'url' => 'https://lpvturismo.com/passeios/mosaicos-do-rio/' ),
++			'es' => array( 'id' => 160, 'url' => 'https://lpvturismo.com/es/mosaicos-del-rio/' ),
++			'en' => array( 'id' => 219, 'url' => 'https://lpvturismo.com/en/mosaics-of-rio/' ),
++		),
++		'tijuca_forest' => array(
++			'pt-BR' => array( 'id' => 85, 'url' => 'https://lpvturismo.com/passeios/imersao-floresta-da-tijuca/' ),
++			'es' => array( 'id' => 194, 'url' => 'https://lpvturismo.com/es/inmersion-floresta-da-tijuca/' ),
++			'en' => array( 'id' => 220, 'url' => 'https://lpvturismo.com/en/tijuca-forest-immersion/' ),
++		),
++		'rio_essential' => array(
++			'pt-BR' => array( 'id' => 86, 'url' => 'https://lpvturismo.com/passeios/rio-essencial/' ),
++			'es' => array( 'id' => 195, 'url' => 'https://lpvturismo.com/es/rio-esencial/' ),
++			'en' => array( 'id' => 221, 'url' => 'https://lpvturismo.com/en/rio-essential/' ),
++		),
++		'lp_experiences' => array(
++			'pt-BR' => array( 'id' => 255, 'url' => 'https://lpvturismo.com/lp-experiences/' ),
++		),
++	);
++}
++
++function lpv_language_seo_current_page() {
++	if ( is_admin() || is_feed() || is_embed() || ! is_singular( 'page' ) ) {
++		return null;
++	}
++	$id = (int) get_queried_object_id();
++	foreach ( lpv_language_seo_groups() as $group ) {
++		foreach ( $group as $language => $page ) {
++			if ( $id === $page['id'] ) {
++				return array( 'language' => $language, 'page' => $page, 'group' => $group );
++			}
++		}
++	}
++	return null;
++}
++
++function lpv_language_seo_language_attributes( $output, $doctype = 'html' ) {
++	$current = lpv_language_seo_current_page();
++	if ( null === $current ) {
++		return $output;
++	}
++	// The native HTML API escapes changed values and preserves dir, prefix and other attributes.
++	$processor = new WP_HTML_Tag_Processor( '<html ' . $output . '>' );
++	if ( ! $processor->next_tag( 'HTML' ) ) {
++		return $output;
++	}
++	$processor->set_attribute( 'lang', $current['language'] );
++	if ( 'xhtml' === $doctype || null !== $processor->get_attribute( 'xml:lang' ) ) {
++		$processor->set_attribute( 'xml:lang', $current['language'] );
++	}
++	return substr( $processor->get_updated_html(), strlen( '<html ' ), -1 );
++}
++
++function lpv_language_seo_is_public_equivalent( $page ) {
++	$post = get_post( $page['id'] );
++	if ( ! ( $post instanceof WP_Post ) || 'page' !== $post->post_type
++		|| 'publish' !== get_post_status( $post ) || '' !== (string) $post->post_password
++		|| ! is_post_publicly_viewable( $post ) ) {
++		return false;
++	}
++	// Do not advertise stale routes or a clone whose IDs refer to different URLs.
++	return untrailingslashit( (string) get_permalink( $post ) ) === untrailingslashit( $page['url'] );
++}
++
++function lpv_language_seo_hreflang() {
++	if ( is_preview() || is_paged() || (int) get_query_var( 'page', 1 ) > 1
++		|| '0' === (string) get_option( 'blog_public' ) ) {
++		return;
++	}
++	$current = lpv_language_seo_current_page();
++	if ( null === $current || ! lpv_language_seo_is_public_equivalent( $current['page'] ) ) {
++		return;
++	}
++	$alternates = array();
++	foreach ( $current['group'] as $language => $page ) {
++		if ( lpv_language_seo_is_public_equivalent( $page ) ) {
++			$alternates[ $language ] = $page['url'];
++		}
++	}
++	if ( isset( $alternates['pt-BR'] ) ) {
++		$alternates['x-default'] = $alternates['pt-BR'];
++	}
++	foreach ( $alternates as $language => $url ) {
++		printf( '<link rel="alternate" hreflang="%s" href="%s" />' . "\n", esc_attr( $language ), esc_url( $url ) );
++	}
++}
++
++add_filter( 'language_attributes', 'lpv_language_seo_language_attributes', 20, 2 );
++add_action( 'wp_head', 'lpv_language_seo_hreflang', 20 );
+diff --git a/wordpress/plugins/lpv-language-seo/README.md b/wordpress/plugins/lpv-language-seo/README.md
+new file mode 100644
+--- /dev/null
++++ b/wordpress/plugins/lpv-language-seo/README.md
+@@ -0,0 +1,70 @@
++# LPV Language SEO
++
++Integração local da Etapa 5. WordPress 6.2+ e PHP 7.4+. Não foi instalada no site oficial.
++
++## Escopo
++
++- `language_attributes`: define `lang` como pt-BR, es ou en apenas nas 22 páginas mapeadas. Preserva `dir`, `prefix` e os demais atributos; mantém `xml:lang` consistente quando existente ou em XHTML, usando a HTML API nativa e seu escape de atributos.
++- `wp_head`: escreve somente `<link rel="alternate" hreflang="...">`, com `esc_attr` e `esc_url`.
++- As sete famílias multilíngues usam os IDs e URLs aprovados na Etapa 4. L&P (ID 255) recebe apenas pt-BR e x-default, quando pública.
++- Confere o estado real no banco em cada requisição: página existente, tipo page, publish, pública, sem senha e permalink igual ao aprovado. Uma tradução indisponível sai do conjunto de todos os equivalentes; quando PT sai, x-default também sai. Os restantes continuam recíprocos, incluindo self-reference.
++- Não emite alternates em previews, embeds, feeds, admin, páginas não mapeadas, paginação ou site com indexação global desativada. `lang` pode ser corrigido na prévia de uma página mapeada, mas ela não recebe alternates.
++- Não usa URLs de parâmetros, fallback de navegação, chamadas HTTP, cron, cookies, sessões, tabelas próprias ou escrita no banco.
++
++Canonical, title, description, Open Graph, Twitter Cards e schema ficam exclusivamente no AIOSEO. O plugin não lê nem altera configurações do AIOSEO e não modifica o locale global do WordPress.
++
++## Instalação manual
++
++1. Fazer backup dos plugins, banco e configurações. Usar primeiro uma cópia de homologação; não instalar automaticamente a partir do GitHub.
++2. Conferir a versão de WordPress/PHP e os IDs/permalinks em `docs/stage-4-language-map.json`. Não editar esses IDs para outra instalação sem revisão do mapa e testes.
++3. Procurar outros emissores de hreflang: plugin multilíngue, snippets, tema filho e tags estáticas da Etapa 4. Escolher esta integração como única origem e desativar somente a saída concorrente, sem desativar AIOSEO. Não colar os arquivos `hreflang/{id}.html` no HEAD junto com este plugin.
++4. Copiar a pasta `lpv-language-seo` para `wp-content/plugins/`. Alternativamente, instalar o ZIP gerado por `python scripts/build_language_plugin_package.py`, em Plugins > Adicionar plugin > Enviar plugin.
++5. Ativar **LPV Language SEO** apenas durante a aplicação manual autorizada. Não há configurações nem migrações de banco.
++6. Limpar o LiteSpeed Cache e caches de CDN/navegador. Repetir a limpeza de TODO o grupo de traduções após publicar, despublicar, proteger ou mudar uma URL, pois um cache de página pode manter alternates antigos.
++7. Conferir o HTML bruto e o checklist abaixo, sem enviar formulários. Salvar a versão anterior do ZIP para rollback.
++
++### Homologação e indexação
++
++Em staging com outro domínio/permalinks ou `blog_public=0`, a ausência de hreflang é intencional. O plugin não anuncia o domínio oficial a partir de IDs não confirmados. Não tornar um staging público/indexável para testar: usar os testes locais ou uma cópia isolada que simule as URLs oficiais. Na aplicação final, conferir as URLs reais.
++
++Noindex individual no AIOSEO e canonical alterado manualmente não são lidos por este plugin; verificar essas configurações antes da liberação. AIOSEO continua sendo o responsável por elas. Este plugin não deve ser usado para autorizar a indexação de conteúdo.
++
++## Conflitos conhecidos
++
++- AIOSEO não gera hreflang por si só. Uma integração multilíngue associada pode gerar: não manter duas origens.
++- Outro filtro tardio em `language_attributes` pode sobrescrever o lang. Não se resolve isso removendo filtros de terceiros indiscriminadamente: identificar e configurar a origem concorrente.
++- Twenty Twenty-Five usa os hooks nativos do documento; nenhuma edição de tema é necessária para este plugin. Os Header/Footer/Post Title duplicados são uma tarefa independente do template da Etapa 4.
++- Alterar prefixos Open Graph, locale do painel, menus ou textos não faz parte desta integração. A política, sem ID incluído nos 22, conserva o idioma definido pelo WordPress.
++
++## Rollback
++
++1. Em Plugins, desativar **LPV Language SEO**. Em falha de acesso ao painel, renomear somente `wp-content/plugins/lpv-language-seo` via gerenciador de arquivos/SFTP.
++2. Limpar LiteSpeed/CDN e conferir o HTML: os alternates deste plugin deixam de aparecer; o atributo lang volta ao comportamento anterior do WordPress.
++3. Para reverter uma atualização, restaurar a pasta/ZIP da versão anterior e testar antes de reativar. Não é necessário restaurar banco: o plugin não escreve opções nem conteúdo.
++4. Não reativar Yoast. AIOSEO e suas configurações permanecem intactos. Uma integração de idiomas anterior só deve voltar se sua reativação for deliberada, sem duplicar emissores.
++
++## Checklist no WordPress
++
++- [ ] Todos os 22 IDs correspondem às páginas e URLs aprovadas; PT/es/en do mapa refletem o idioma real.
++- [ ] As sete famílias completas têm quatro alternates cada, com URLs idênticas entre membros e self-reference.
++- [ ] L&P tem somente pt-BR e x-default. Nada para `/es/servicios/#lp-experiences` ou EN.
++- [ ] Remover EN de publicação na cópia de teste retira EN de todo o trio; recolocar publish restaura EN. Não fazer esse experimento no site oficial.
++- [ ] PT indisponível elimina pt-BR e x-default, sem apontar para rascunho. Senha, privado, agendamento, lixeira, página ausente e permalink diferente também excluem o equivalente.
++- [ ] Preview não recebe alternates. Busca, posts, política e 404 não ganham mapeamentos inventados.
++- [ ] Um único `lang`, preservando `dir`/`prefix`; atributos corretos já no HTML bruto, sem depender de JavaScript.
++- [ ] Sem canonical/title/description/OG/Twitter/schema adicionais; AIOSEO continua como único emissor desses elementos.
++- [ ] Conferir noindex/canonical individual no AIOSEO; limpar caches de todo o grupo após mudanças de disponibilidade.
++- [ ] Header, rodapé, imagens e formulários não mudaram. Não enviar formulários reais.
++
++## Testes locais
++
++```powershell
++php -l wordpress/plugins/lpv-language-seo/lpv-language-seo.php
++php tests/php/test_lpv_language_seo.php --wordpress-core=C:/caminho/wordpress
++python -m unittest discover -s tests -p "test_*.py"
++python scripts/build_language_plugin_package.py
++```
++
++O harness usa a HTML API e funções de escape reais do core fornecido localmente. Consulta de páginas, opções e contexto de requisição são substituídos por fixtures em memória; não inicia o WordPress, não usa banco, rede ou credenciais. Os testes Python verificam paridade entre o PHP, os mapas e o pacote da Etapa 4. Não substituem o aceite em WordPress/AIOSEO real.
++
++Fontes: [WordPress language_attributes](https://developer.wordpress.org/reference/hooks/language_attributes/), [HTML API](https://developer.wordpress.org/reference/classes/wp_html_tag_processor/), [visibilidade pública](https://developer.wordpress.org/reference/functions/is_post_publicly_viewable/) e [AIOSEO e hreflang](https://aioseo.com/docs/does-all-in-one-seo-output-hreflang-tags/).
+diff --git a/tests/php/test_lpv_language_seo.php b/tests/php/test_lpv_language_seo.php
+new file mode 100644
+--- /dev/null
++++ b/tests/php/test_lpv_language_seo.php
+@@ -0,0 +1,211 @@
++<?php
++/** Offline harness: real WP hooks/HTML API/escaping, in-memory request and post fixtures. */
++error_reporting( E_ALL );
++$options = getopt( '', array( 'wordpress-core:' ) );
++$core = isset( $options['wordpress-core'] ) ? rtrim( $options['wordpress-core'], '/\\' ) : getenv( 'WP_CORE_DIR' );
++if ( ! $core || ! is_file( $core . '/wp-includes/html-api/class-wp-html-tag-processor.php' ) ) {
++	fwrite( STDERR, "Provide --wordpress-core=/path/to/wordpress (6.2+), or WP_CORE_DIR.\n" );
++	exit( 1 );
++}
++define( 'ABSPATH', $core . '/' );
++define( 'WPINC', 'wp-includes' );
++require_once $core . '/wp-includes/plugin.php';
++require_once $core . '/wp-includes/formatting.php';
++require_once $core . '/wp-includes/kses.php';
++require_once $core . '/wp-includes/class-wp-post.php';
++spl_autoload_register( function ( $class ) use ( $core ) {
++	$file = $core . '/wp-includes/html-api/class-' . strtolower( str_replace( '_', '-', $class ) ) . '.php';
++	if ( 0 === strpos( $class, 'WP_HTML_' ) && is_file( $file ) ) {
++		require_once $file;
++	}
++} );
++
++function get_option( $key, $default = false ) {
++	return array( 'blog_public' => $GLOBALS['state']['blog_public'], 'blog_charset' => 'UTF-8' )[ $key ] ?? $default;
++}
++function wp_load_alloptions() { return array( 'blog_charset' => 'UTF-8' ); }
++function wp_allowed_protocols() { return array( 'http', 'https' ); }
++function _doing_it_wrong( $function, $message, $version ) { throw new RuntimeException( $function . ': ' . $message ); }
++function __( $text ) { return $text; }
++function is_admin() { return $GLOBALS['state']['admin']; }
++function is_feed() { return $GLOBALS['state']['feed']; }
++function is_embed() { return $GLOBALS['state']['embed']; }
++function is_preview() { return $GLOBALS['state']['preview']; }
++function is_paged() { return $GLOBALS['state']['paged']; }
++function is_singular( $type ) { return $GLOBALS['state']['singular'] && 'page' === $type; }
++function get_query_var( $key, $default = '' ) { return $GLOBALS['state']['vars'][ $key ] ?? $default; }
++function get_queried_object_id() { return $GLOBALS['state']['id']; }
++function get_post( $id ) { return $id instanceof WP_Post ? $id : ( $GLOBALS['posts'][ $id ] ?? null ); }
++function get_post_status( $post ) { return get_post( $post )->post_status; }
++function get_permalink( $post ) { return $GLOBALS['urls'][ get_post( $post )->ID ] ?? false; }
++function is_post_publicly_viewable( $post ) {
++	return 'publish' === $post->post_status && ! in_array( $post->ID, $GLOBALS['not_public'], true );
++}
++
++$root = dirname( __DIR__, 2 );
++$language_map = json_decode( file_get_contents( $root . '/docs/stage-4-language-map.json' ), true, 512, JSON_THROW_ON_ERROR );
++$rows = $language_map['pages'];
++$assertions = 0;
++
++function reset_fixture() {
++	$GLOBALS['state'] = array( 'id' => 7, 'admin' => false, 'feed' => false, 'embed' => false,
++		'preview' => false, 'paged' => false, 'singular' => true, 'blog_public' => '1', 'vars' => array() );
++	$GLOBALS['posts'] = array();
++	$GLOBALS['urls'] = array();
++	$GLOBALS['not_public'] = array();
++	foreach ( $GLOBALS['rows'] as $row ) {
++		$GLOBALS['posts'][ $row['id'] ] = new WP_Post( (object) array(
++			'ID' => $row['id'], 'post_type' => 'page', 'post_status' => 'publish', 'post_password' => '',
++		) );
++		$GLOBALS['urls'][ $row['id'] ] = $row['canonical'];
++	}
++}
++
++function same( $expected, $actual, $label ) {
++	++$GLOBALS['assertions'];
++	if ( $expected !== $actual ) {
++		throw new RuntimeException( $label . "\nExpected: " . var_export( $expected, true ) . "\nActual: " . var_export( $actual, true ) );
++	}
++}
++
++function attribute( $attributes, $name ) {
++	$processor = new WP_HTML_Tag_Processor( '<html ' . $attributes . '>' );
++	$processor->next_tag();
++	return $processor->get_attribute( $name );
++}
++
++function output_tags() {
++	ob_start();
++	do_action( 'wp_head' );
++	return ob_get_clean();
++}
++
++function alternates() {
++	$html = output_tags();
++	$processor = new WP_HTML_Tag_Processor( $html );
++	$links = array();
++	while ( $processor->next_tag() ) {
++		same( 'LINK', $processor->get_tag(), 'Only link elements may be emitted' );
++		same( 'alternate', $processor->get_attribute( 'rel' ), 'Only alternate links may be emitted' );
++		$language = $processor->get_attribute( 'hreflang' );
++		same( false, isset( $links[ $language ] ), 'No duplicate alternates' );
++		$links[ $language ] = $processor->get_attribute( 'href' );
++	}
++	return $links;
++}
++
++try {
++	reset_fixture();
++	$hooks_before = array_keys( $GLOBALS['wp_filter'] );
++	require $root . '/wordpress/plugins/lpv-language-seo/lpv-language-seo.php';
++	$new_hooks = array_values( array_diff( array_keys( $GLOBALS['wp_filter'] ), $hooks_before ) );
++	sort( $new_hooks );
++	same( array( 'language_attributes', 'wp_head' ), $new_hooks, 'Only two WP hooks registered' );
++
++	$expected_groups = array();
++	foreach ( $rows as $row ) {
++		$expected_groups[ $row['family'] ][ $row['lang'] ] = array( 'id' => $row['id'], 'url' => $row['canonical'] );
++	}
++	$actual_groups = lpv_language_seo_groups();
++	ksort( $actual_groups );
++	ksort( $expected_groups );
++	same( $expected_groups, $actual_groups, 'Exact groups, IDs and URLs from stage 4' );
++
++	foreach ( $rows as $row ) {
++		$GLOBALS['state']['id'] = $row['id'];
++		$attrs = apply_filters( 'language_attributes', 'dir="ltr" lang="pt-BR" prefix="og: https://ogp.me/ns#"', 'html' );
++		same( $row['lang'], attribute( $attrs, 'lang' ), 'Language ' . $row['id'] );
++		same( 'ltr', attribute( $attrs, 'dir' ), 'Direction preserved' );
++		same( 'og: https://ogp.me/ns#', attribute( $attrs, 'prefix' ), 'OG prefix preserved' );
++		same( $row['alternates'], alternates(), 'Published alternates ' . $row['id'] );
++	}
++
++	// Every publication subset, on every member, including self and missing PT.
++	foreach ( $actual_groups as $group ) {
++		$members = array_values( $group );
++		$languages = array_keys( $group );
++		for ( $mask = 0; $mask < ( 1 << count( $members ) ); ++$mask ) {
++			reset_fixture();
++			$expected = array();
++			foreach ( $members as $index => $member ) {
++				$published = (bool) ( $mask & ( 1 << $index ) );
++				$GLOBALS['posts'][ $member['id'] ]->post_status = $published ? 'publish' : 'draft';
++				if ( $published ) { $expected[ $languages[ $index ] ] = $member['url']; }
++			}
++			if ( isset( $expected['pt-BR'] ) ) { $expected['x-default'] = $expected['pt-BR']; }
++			foreach ( $members as $member ) {
++				$GLOBALS['state']['id'] = $member['id'];
++				$visible = 'publish' === $GLOBALS['posts'][ $member['id'] ]->post_status;
++				same( $visible ? $expected : array(), alternates(), 'Publication subset ' . $mask . ', page ' . $member['id'] );
++			}
++		}
++	}
++
++	foreach ( array( 'draft', 'pending', 'future', 'private', 'trash', 'auto-draft' ) as $status ) {
++		reset_fixture();
++		$GLOBALS['posts'][21]->post_status = $status;
++		same( false, isset( alternates()['en'] ), 'Exclude status ' . $status );
++	}
++	foreach ( array( 'missing', 'password', 'post_type', 'not_public', 'changed_url', 'staging', 'no_permalink' ) as $case ) {
++		reset_fixture();
++		if ( 'missing' === $case ) { unset( $GLOBALS['posts'][21] ); }
++		if ( 'password' === $case ) { $GLOBALS['posts'][21]->post_password = '0'; }
++		if ( 'post_type' === $case ) { $GLOBALS['posts'][21]->post_type = 'post'; }
++		if ( 'not_public' === $case ) { $GLOBALS['not_public'][] = 21; }
++		if ( 'changed_url' === $case ) { $GLOBALS['urls'][21] = 'https://lpvturismo.com/en/new/'; }
++		if ( 'staging' === $case ) { $GLOBALS['urls'][21] = 'https://staging.example/en/'; }
++		if ( 'no_permalink' === $case ) { $GLOBALS['urls'][21] = false; }
++		same( false, isset( alternates()['en'] ), 'Exclude unavailable equivalent: ' . $case );
++		$GLOBALS['state']['id'] = 21;
++		same( '', output_tags(), 'Unavailable current page: ' . $case );
++	}
++
++	foreach ( array( 'admin', 'feed', 'embed', 'preview', 'paged' ) as $flag ) {
++		reset_fixture();
++		$GLOBALS['state'][ $flag ] = true;
++		same( '', output_tags(), 'No head output in ' . $flag );
++		if ( in_array( $flag, array( 'admin', 'feed', 'embed' ), true ) ) {
++			same( 'lang="de"', apply_filters( 'language_attributes', 'lang="de"', 'html' ), 'Unchanged attributes in ' . $flag );
++		}
++	}
++	reset_fixture();
++	$GLOBALS['state']['singular'] = false;
++	same( '', output_tags(), 'Archives/search/404 do not emit' );
++	same( 'lang="de"', apply_filters( 'language_attributes', 'lang="de"' ), 'Non-page lang untouched' );
++	reset_fixture();
++	$GLOBALS['state']['vars']['page'] = 2;
++	same( '', output_tags(), 'Multipage content excluded' );
++	reset_fixture();
++	$GLOBALS['state']['blog_public'] = '0';
++	same( '', output_tags(), 'Globally noindex excluded' );
++	reset_fixture();
++	$GLOBALS['state']['id'] = 999;
++	same( '', output_tags(), 'Unmapped page excluded' );
++	same( 'lang="de"', apply_filters( 'language_attributes', 'lang="de"' ), 'Unmapped lang untouched' );
++	reset_fixture();
++	$GLOBALS['state']['id'] = 20;
++	$GLOBALS['state']['vars'] = array( 'solicitacao' => 'mipim', 'lang' => 'xx', 'id' => 7 );
++	same( 'es', attribute( apply_filters( 'language_attributes', 'lang="pt-BR"' ), 'lang' ), 'Query data cannot override approved language' );
++
++	foreach ( array( '', "lang='pt-BR'", 'LANG="pt-BR"', 'xml:lang="pt-BR"', 'dir="rtl" data-note="a &amp; b lang=&quot;xx&quot;"' ) as $input ) {
++		$output = apply_filters( 'language_attributes', $input, 'xhtml' );
++		same( 'es', attribute( $output, 'lang' ), 'Attribute parsing' );
++		same( 'es', attribute( $output, 'xml:lang' ), 'XHTML consistency' );
++		same( attribute( $input, 'data-note' ), attribute( $output, 'data-note' ), 'Escaped custom attribute preserved' );
++	}
++	$attrs = apply_filters( 'language_attributes', 'lang="pt-BR" xml:lang="pt-BR" dir="rtl"', 'html' );
++	same( 'es', attribute( $attrs, 'xml:lang' ), 'Existing xml:lang corrected in HTML' );
++	same( 'rtl', attribute( $attrs, 'dir' ), 'Existing direction preserved' );
++	$attrs = apply_filters( 'language_attributes', 'lang="pt-BR"', 'html' );
++	same( null, attribute( $attrs, 'xml:lang' ), 'No unnecessary XML attribute in HTML' );
++	$escapes = array( 'attr' => 0, 'url' => 0 );
++	add_filter( 'attribute_escape', function ( $value ) use ( &$escapes ) { ++$escapes['attr']; return $value; } );
++	add_filter( 'clean_url', function ( $value ) use ( &$escapes ) { ++$escapes['url']; return $value; } );
++	output_tags();
++	same( 4, $escapes['attr'], 'Native attribute escaping used for all hreflangs' );
++	same( 4, $escapes['url'], 'Native URL escaping used for all URLs' );
++	fwrite( STDOUT, "PASS: {$assertions} assertions; all 22 pages; all publication subsets; no network/database.\n" );
++} catch ( Throwable $error ) {
++	fwrite( STDERR, $error . "\n" );
++	exit( 1 );
++}
+diff --git a/tests/test_stage5_plugin.py b/tests/test_stage5_plugin.py
+new file mode 100644
+--- /dev/null
++++ b/tests/test_stage5_plugin.py
+@@ -0,0 +1,101 @@
++import hashlib
++import json
++import os
++import re
++import shutil
++import subprocess
++import unittest
++import zipfile
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[1]
++PLUGIN = ROOT / "wordpress/plugins/lpv-language-seo/lpv-language-seo.php"
++PHP = os.environ.get("PHP_BINARY") or shutil.which("php")
++WP_CORE = os.environ.get("WP_CORE_DIR")
++
++
++class Stage5StaticTests(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.source = PLUGIN.read_text(encoding="utf-8")
++        cls.approved = json.loads((ROOT / "docs/stage-4-language-map.json").read_text(encoding="utf-8"))
++
++    def test_literal_map_matches_all_three_sources(self):
++        # Require the explicit literal map shape; the PHP harness also checks groups at runtime.
++        rows = re.findall(r"'(pt-BR|es|en)' => array\( 'id' => (\d+), 'url' => '([^']+)' \)", self.source)
++        self.assertEqual(len(rows), 22)
++        actual = {int(page_id): (lang, url) for lang, page_id, url in rows}
++        expected = {row["id"]: (row["lang"], row["canonical"]) for row in self.approved["pages"]}
++        self.assertEqual(actual, expected)
++        page_map = json.loads((ROOT / "docs/page-map.json").read_text(encoding="utf-8"))
++        self.assertEqual(actual, {p["id"]: (p["lang"], page_map["site"] + p["url"])
++                                  for pages in page_map["pages"].values() for p in pages.values()})
++        packaged = json.loads((ROOT / "publication/stage-4/language-map.json").read_text(encoding="utf-8"))
++        self.assertEqual(self.approved, packaged)
++
++    def test_only_required_hooks(self):
++        hooks = re.findall(r"add_(?:filter|action)\( '([^']+)'", self.source)
++        self.assertEqual(hooks, ["language_attributes", "wp_head"])
++        self.assertIn("new WP_HTML_Tag_Processor", self.source)
++        self.assertIn("esc_attr( $language )", self.source)
++        self.assertIn("esc_url( $url )", self.source)
++
++    def test_no_competing_metadata_or_io(self):
++        self.assertNotRegex(self.source, r"(?i)<(?:meta|title|script)|rel=[\"']canonical|application/ld\+json")
++        self.assertNotRegex(self.source, r"\b(?:wp_remote_\w+|curl_\w+|file_get_contents|fopen|fsockopen|"
++                            r"update_option|add_option|delete_option|wp_update_post|wp_insert_post|"
++                            r"update_post_meta|register_activation_hook|register_deactivation_hook|"
++                            r"exec|shell_exec|system|eval|remove_all_actions)\s*\(")
++        self.assertNotRegex(self.source, r"\$_(?:GET|POST|REQUEST|COOKIE|SERVER)|\$wpdb")
++
++    def test_lp_has_no_fake_translation(self):
++        group = self.source.split("'lp_experiences' => array(", 1)[1].split("\n\t\t),", 1)[0]
++        self.assertIn("'pt-BR'", group)
++        self.assertNotIn("'es'", group)
++        self.assertNotIn("'en'", group)
++        self.assertNotIn("#lp-experiences", self.source)
++
++    def test_installation_rollback_and_minimum_requirements(self):
++        self.assertIn("Requires at least: 6.2", self.source)
++        self.assertIn("Requires PHP: 7.4", self.source)
++        self.assertIn("if ( ! defined( 'ABSPATH' ) )", self.source)
++        readme = PLUGIN.with_name("README.md").read_text(encoding="utf-8")
++        for topic in ("## Instalação", "## Rollback", "## Checklist", "## Conflitos", "## Testes locais"):
++            self.assertIn(topic, readme)
++
++    def test_installable_package_is_exact_and_isolated(self):
++        folder = ROOT / "publication/stage-5"
++        manifest = json.loads((folder / "manifest.json").read_text(encoding="utf-8"))
++        archive = folder / manifest["archive"]
++        self.assertEqual(hashlib.sha256(archive.read_bytes()).hexdigest(), manifest["archive_sha256"])
++        with zipfile.ZipFile(archive) as zipped:
++            self.assertEqual(set(zipped.namelist()), {"lpv-language-seo/lpv-language-seo.php", "lpv-language-seo/README.md"})
++            for name, digest in manifest["files"].items():
++                source = PLUGIN.parent / Path(name).name
++                self.assertEqual(zipped.read(name), source.read_bytes())
++                self.assertEqual(hashlib.sha256(zipped.read(name)).hexdigest(), digest)
++
++
++@unittest.skipUnless(PHP, "PHP not available; set PHP_BINARY for runtime checks")
++class Stage5PHPTests(unittest.TestCase):
++    def run_php(self, *args):
++        result = subprocess.run([PHP, *map(str, args)], cwd=ROOT, capture_output=True, text=True, timeout=60)
++        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
++        self.assertEqual(result.stderr, "")
++        return result.stdout
++
++    def test_php_lint(self):
++        for path in (PLUGIN, ROOT / "tests/php/test_lpv_language_seo.php"):
++            self.assertIn("No syntax errors", self.run_php("-l", path))
++
++    def test_direct_access_guard(self):
++        self.assertEqual(self.run_php(PLUGIN), "")
++
++    @unittest.skipUnless(WP_CORE, "Set WP_CORE_DIR to a local WordPress 6.2+ core")
++    def test_behavior_with_native_html_api_and_escaping(self):
++        output = self.run_php(ROOT / "tests/php/test_lpv_language_seo.php", "--wordpress-core=" + WP_CORE)
++        self.assertRegex(output, r"PASS: \d+ assertions; all 22 pages")
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/scripts/build_language_plugin_package.py b/scripts/build_language_plugin_package.py
+new file mode 100644
+--- /dev/null
++++ b/scripts/build_language_plugin_package.py
+@@ -0,0 +1,41 @@
++#!/usr/bin/env python3
++"""Package only the reviewed plugin files. No WordPress connection or activation."""
++import hashlib
++import json
++import re
++import zipfile
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[1]
++PLUGIN = ROOT / "wordpress/plugins/lpv-language-seo"
++OUTPUT = ROOT / "publication/stage-5"
++FILES = ("lpv-language-seo.php", "README.md")
++
++
++def build():
++    source = (PLUGIN / FILES[0]).read_text(encoding="utf-8")
++    version = re.search(r"^ \* Version: ([0-9.]+)$", source, re.MULTILINE).group(1)
++    OUTPUT.mkdir(parents=True, exist_ok=True)
++    archive = OUTPUT / f"lpv-language-seo-{version}.zip"
++    hashes = {}
++    with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zipped:
++        for name in FILES:
++            data = (PLUGIN / name).read_bytes()
++            member = "lpv-language-seo/" + name
++            info = zipfile.ZipInfo(member, date_time=(2026, 9, 22, 0, 0, 0))
++            info.compress_type = zipfile.ZIP_DEFLATED
++            zipped.writestr(info, data)
++            hashes[member] = hashlib.sha256(data).hexdigest()
++    manifest = {
++        "version": version,
++        "archive": archive.name,
++        "archive_sha256": hashlib.sha256(archive.read_bytes()).hexdigest(),
++        "files": hashes,
++        "installation": "Manual only. Not installed or activated on WordPress.",
++    }
++    (OUTPUT / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
++    print(f"Prepared {archive} ({len(FILES)} files, no automatic deployment)")
++
++
++if __name__ == "__main__":
++    build()
+diff --git a/docs/stage-5-language-seo.md b/docs/stage-5-language-seo.md
+new file mode 100644
+--- /dev/null
++++ b/docs/stage-5-language-seo.md
+@@ -0,0 +1,79 @@
++# Etapa 5 - integração mínima de idioma e hreflang
++
++Revisão local de 22/09/2026. Plugin 1.0.0 implementado e testado; não instalado, ativado ou publicado no WordPress.
++
++## Resultado
++
++`wordpress/plugins/lpv-language-seo/lpv-language-seo.php` registra somente dois hooks nativos: filtro `language_attributes` e ação `wp_head`. O mapa local contém as 22 páginas aprovadas da Etapa 4, sem consulta externa ou dependência dos arquivos de documentação durante a execução.
++
++As responsabilidades do AIOSEO continuam exclusivas: canonical, title, meta description, Open Graph, Twitter Cards e schema. O plugin não interfere nesses hooks, nos atributos existentes do tema, nas configurações, nos textos ou no banco.
++
++## Regras efetivas
++
++- Lang por ID: oito páginas pt-BR, sete es e sete en. Nenhuma escolha vem de parâmetros de URL.
++- Sete trios recíprocos, incluindo referência à própria página. O status desejado do JSON não substitui o status real: somente páginas publish, públicas, sem senha e com permalink aprovado entram no grupo.
++- Sem PT disponível, não há pt-BR nem x-default; ES/EN disponíveis continuam recíprocos. Não se usa a homepage nem outra página como substituta artificial.
++- L&P (255): somente pt-BR e x-default. Serviços ES/EN não são traduções de L&P.
++- Sem alternates em admin, feeds, embeds, previews, páginas fora do mapa, paginação ou site globalmente noindex. Idioma da prévia mapeada pode ser corrigido sem anunciar a prévia ao buscador.
++- URLs alteradas, página excluída, senha, agendamento, privado e rascunho removem o respectivo equivalente. Cache antigo exige limpeza de todas as traduções do grupo.
++- WP_HTML_Tag_Processor preserva outros atributos e escapa lang/xml:lang; esc_attr e esc_url protegem as tags de saída.
++
++## Arquivos desta etapa
++
++| Arquivo | Finalidade |
++| --- | --- |
++| `wordpress/plugins/lpv-language-seo/lpv-language-seo.php` | Plugin autossuficiente, sem instalação automática |
++| `wordpress/plugins/lpv-language-seo/README.md` | Instalação, conflitos, rollback e checklist manual |
++| `tests/php/test_lpv_language_seo.php` | Testes offline com core HTML API/escape/hooks reais e fixtures de requisição/publicação |
++| `tests/test_stage5_plugin.py` | Paridade dos mapas, responsabilidades exclusivas, lint, acesso direto e pacote |
++| `scripts/build_language_plugin_package.py` | Gera o ZIP instalável e os hashes sem conexão WordPress |
++| `.gitattributes` | LF nos fontes e bytes preservados nos pacotes para conferir hashes também em checkouts Windows |
++| `docs/stage-4-wordpress-checklist.md` | Referência à implementação da Etapa 5; proibição de duplicar tags estáticas |
++| `docs/stage-5-language-seo.md` | Este registro de escopo, testes e pendências |
++| `publication/stage-5/` | ZIP do plugin, manifesto e diff textual para revisão |
++
++O pacote da Etapa 4 foi regenerado para incorporar o checklist atualizado e normalizar LF nos HTMLs/CSS antes de gerar os hashes. Essa normalização de finais de linha não altera textos, URLs, imagens, estilos ou scripts; permite conferir os mesmos bytes depois de um checkout Windows. Mapas e metadados aprovados permanecem iguais. Alterações anteriores que já estavam no workspace serão preservadas no commit conjunto solicitado com `git add .`; não são atribuídas a este plugin.
++
++## Testes executados
++
++- **PHP lint:** plugin e harness sem erros de sintaxe; acesso direto ao PHP termina sem saída.
++- **PHP comportamental:** 1.368 asserções passaram, cobrindo os 22 IDs, todas as combinações de publicação dos grupos, reciprocidade, x-default, exclusões, preservação de atributos e escape nativo.
++- **Suite Python:** 20 testes passaram, sem skips: 11 da Etapa 4 e 9 da Etapa 5, incluindo execução do harness PHP.
++- **Checkout do índice Git:** os mesmos 20 testes passaram em uma cópia isolada criada com `git checkout-index`; conferência byte a byte válida também com os atributos de finais de linha aplicados. `git diff --cached --check` passou.
++- **Paridade:** mapa PHP igual a `docs/stage-4-language-map.json`, `docs/page-map.json` e ao mapa do pacote da Etapa 4. Nenhum fallback virou tradução.
++- **Pacote:** ZIP instalável contém apenas a pasta do plugin com PHP e README; arquivos e hashes verificados. Nenhuma credencial, runtime PHP ou core WordPress faz parte do ZIP.
++
++Ambiente efetivamente testado: PHP CLI 8.3.35 e HTML API/hooks/escape do WordPress 6.2, versão mínima declarada. PHP portátil obtido do distribuidor oficial, com SHA-256 conferido antes da execução; core obtido de wordpress.org. Ambos permanecem no diretório temporário do sistema, fora do repositório. Não foi feita uma instalação completa do CMS, nem teste com AIOSEO/tema/cache em produção.
++
++Para repetir, com PHP e core WordPress já disponíveis localmente:
++
++```powershell
++$env:PHP_BINARY = 'C:/caminho/php.exe'
++$env:WP_CORE_DIR = 'C:/caminho/wordpress'
++python scripts/build_language_plugin_package.py
++python -m unittest discover -s tests -p "test_*.py" -v
++```
++
++Sem PHP/core, os testes Python estáticos continuam disponíveis e os testes de runtime são marcados como skipped, não como executados. Para validar só o PHP:
++
++```powershell
++php -l wordpress/plugins/lpv-language-seo/lpv-language-seo.php
++php tests/php/test_lpv_language_seo.php --wordpress-core=C:/caminho/wordpress
++```
++
++## Revisão e GitHub
++
++Branch de trabalho: `codex/lpv-language-seo`, criada a partir da main local com as alterações anteriores preservadas. Commit solicitado: `Add LPV multilingual lang and hreflang integration`. Sem force push, merge automático, integração contínua de publicação ou acesso ao WordPress. O hash definitivo e o resultado do push são informados no encerramento da tarefa.
++
++O diff textual completo desta etapa fica em `publication/stage-5/integration.diff`. A revisão Git do commit também inclui os arquivos das etapas anteriores solicitados em `git add .`; binários são apresentados como arquivos completos nos pacotes, não como trechos legíveis de texto.
++
++## Aceite pendente no WordPress
++
++1. Fazer backup e conferir versão, IDs, URLs e a inexistência de outro emissor de hreflang, inclusive snippets estáticos da Etapa 4.
++2. Instalar/ativar manualmente conforme README. AIOSEO permanece ativo; não reativar Yoast.
++3. Conferir HTML bruto, noindex individual/canonical no AIOSEO, reciprocidade, lang e x-default após limpar caches. O plugin não lê noindex individual do AIOSEO.
++4. Em staging com domínio diferente ou indexação bloqueada, hreflang fica vazio por segurança. Não expor staging para forçar teste; usar o harness offline ou cópia isolada com URLs oficiais simuladas.
++5. Validar o Twenty Twenty-Five no CMS real. Este plugin não remove Header/Footer/Post Title nativos; a correção do template da Etapa 4 continua necessária.
++6. Não enviar formulários. A instalação do plugin não valida FormSubmit, analytics, conteúdo comercial, imagens ou entrega de e-mail.
++
++Rollback: desativar o plugin (ou renomear somente sua pasta em caso de falha no painel), limpar cache e, se necessário, restaurar o ZIP anterior. Nenhum dado precisa de migração ou reversão no banco.
+diff --git a/docs/stage-4-wordpress-checklist.md b/docs/stage-4-wordpress-checklist.md
+--- a/docs/stage-4-wordpress-checklist.md
++++ b/docs/stage-4-wordpress-checklist.md
+@@ -1,106 +1,108 @@
+-# Etapa 4 - integração e pré-publicação WordPress
+-
+-Decisões do proprietário: 22/09/2026. Pacote local para revisão; não é publicação automática.
+-
+-## Escopo e decisões resolvidas
+-
+-- Sete páginas EN revisadas e autorizadas para publicação. `status: publish` no mapa representa o estado desejado, não uma alteração remota executada.
+-- Yoast removido; somente AIOSEO administra title, description, canonical, Open Graph e schema.
+-- Política aprovada e publicada: https://lpvturismo.com/politica-de-privacidade/.
+-- Fonte jurídica informada: `LPV_Turismo_Politica_de_Privacidade_Site_2026.md`. Não encontrada neste checkout, em Documentos ou Downloads. Não recriar nem substituir a política publicada.
+-- Nenhum texto comercial, endereço de imagem ou integração de formulário foi alterado nesta etapa. Os HTMLs receberam apenas o link jurídico no rodapé.
+-- O CSS acrescenta somente quebra de linha, alinhamento e apresentação acessível desse link. A organização do rodapé permanece.
+-
+-## Inventário e equivalências
+-
+-`docs/page-map.json` é a fonte dos IDs, caminhos, arquivos, famílias, idiomas e estados desejados. O inventário gerado contém as 22 páginas: oito PT, sete ES e sete EN.
+-
+-Existem sete famílias completas: homepage, passeios, serviços, formulário, Mosaicos, Tijuca e Rio Essencial. Cada uma tem três equivalentes reais e recebe o mesmo conjunto recíproco de quatro alternates: `pt-BR`, `es`, `en` e `x-default` (PT).
+-
+-L&P Experiences (ID 255) tem somente PT. Seu canonical, `pt-BR` e `x-default` apontam para `/lp-experiences/`; `es` e `en` são omitidos. Os destinos `/es/servicios/#lp-experiences` e `/en/services/#lp-experiences` são alternativas de navegação, nunca traduções da página L&P nem alternates SEO.
+-
+-A política é um documento adicional, fora dos 22 fragmentos. Não há traduções jurídicas fornecidas. Todos os rodapés apontam para o mesmo documento PT; ES e EN identificam seu idioma no texto do link e com `hreflang="pt-BR"`.
+-
+-## Conteúdo do pacote
+-
+-Gerar novamente após qualquer revisão:
+-
+-```powershell
+-python scripts/build_wordpress_package.py
+-python -m unittest discover -s tests -p "test_stage4*.py"
+-```
+-
+-Saída: `publication/stage-4/` e `publication/lpv-wordpress-stage-4.zip`.
+-
+-- `html/pt`, `html/es`, `html/en`: os 22 fragmentos, idênticos byte a byte às fontes. Aplicar apenas no conteúdo da página correspondente, preservando scripts e estilos inline existentes.
+-- `css/lpv-style.css`: CSS completo; idêntico a `css/lpv-style.css` e `docs/lpv-css-para-wordpress.css`.
+-- `url-map.json`: IDs WordPress, arquivos e URLs. Não criar novos slugs, redirecionamentos ou páginas duplicadas.
+-- `language-map.json`: idioma do documento, canonical, alternates, equivalentes ausentes e distinção entre fallback de navegação e tradução.
+-- `aioseo-metadata.json` e `aioseo-metadata.csv`: title, description e canonical finais, extraídos sem alteração da tabela da Etapa 3. CSV é uma planilha de aplicação/conferência manual, NÃO um importador nativo garantido do AIOSEO.
+-- `hreflang/{id}.html`: somente tags de idioma para o HEAD da página com esse ID. Não inserir no bloco HTML de conteúdo nem colar todos os arquivos em todas as páginas.
+-- `wordpress/lpv-content-only.html`: modelo de template de blocos, não conteúdo da página nem arquivo para substituir o tema inteiro.
+-- `CHECKLIST.md`, `REVIEW-REPORT.md`, `PAGE-INVENTORY.md`, `PUBLIC-OBSERVATION.json`, `VALIDATION.json` e `manifest.json`: instruções, evidências e hashes SHA-256 para conferência.
+-
+-## Aplicação manual no WordPress
+-
+-### 1. Backup e staging
+-
+-- [ ] Exportar conteúdo, banco, templates personalizados, configurações AIOSEO e CSS adicional. Preservar um backup anterior por item alterado.
+-- [ ] Aplicar primeiro em staging. Não rodar `export_public_pages.py` sobre fontes revisadas como substituição do pacote.
+-- [ ] Conferir os 22 IDs e URLs no painel. As sete EN têm publicação autorizada; não pedir nova decisão editorial. Não alterar a página jurídica.
+-
+-### 2. Template: retirar a causa da duplicidade
+-
+-O código do template salvo no banco não está versionado neste repositório. O DOM público permite identificar os elementos, mas não confirmar o nome do template escolhido no painel. Conferir a atribuição antes de editar.
+-
+-1. Em **Aparência > Editor > Design > Modelos/Templates**, criar um template próprio chamado **LPV - Conteúdo completo**, usando o modelo do pacote. Atribuí-lo SOMENTE às 22 páginas do inventário. Não editar globalmente os templates de posts, política, busca, arquivo ou erro 404.
+-2. Na visualização em lista, remover as referências a **Header/Cabeçalho** e **Footer/Rodapé** (`core/template-part`, normalmente `slug: header` e `slug: footer`). Remover a referência no template, não apagar a parte compartilhada da biblioteca.
+-3. Remover **Post Title/Título do post** (`core/post-title`), responsável por `.wp-block-post-title`. Não apagar o H1 existente dentro do HTML LPV.
+-4. Retirar blocos **Spacer/Espaçador** e grupos vazios que serviam apenas aos três blocos removidos. No grupo principal, definir margem, padding e espaçamento entre blocos como zero, largura completa e sem largura restrita herdada.
+-5. Manter exatamente um **Post Content/Conteúdo do post** (`core/post-content`), que renderiza o HTML salvo. Não copiar o HTML comercial para dentro do template.
+-6. Manter um único `main` no template. Os fragmentos LPV já não contêm outro `main`. Preservar `header.topbar` e `footer.lpv-site-footer` internos ao conteúdo. Verificar o destino do skip link gerado pelo WordPress.
+-7. Na homepage PT, verificar **Front Page/Página inicial**: quando existe, esse template tem precedência. Aplicar nele a mesma estrutura somente de conteúdo. Conferir também templates específicos por página; uma atribuição genérica pode não prevalecer.
+-8. Publicar o template apenas na janela de publicação aprovada, limpar LiteSpeed e inspecionar o código-fonte sem depender do CSS. Resultado esperado em cada página: zero `.wp-block-post-title`, zero `header.wp-block-template-part`, zero `footer.wp-block-template-part`, um H1 e um main.
+-
+-O CSS defensivo existente foi preservado para não quebrar o site antes dessa aplicação. Ele não substitui a remoção dos blocos. Há regras antigas amplas em `body.wp-singular`; verificar separadamente a página jurídica, que não faz parte do pacote, antes de remover ou restringir essas regras em outra revisão.
+-
+-### 3. AIOSEO e idiomas
+-
+-- [ ] Confirmar AIOSEO ativo e Yoast ausente; limpar cache antigo. Não instalar outro plugin SEO.
+-- [ ] Para cada ID, aplicar title e description literais da tabela final no painel AIOSEO. Evitar smart tags que acrescentem novamente o nome do site. Configurar canonical absoluto, sem parâmetros como `?experience=` ou `?success=`.
+-- [ ] Conferir um único title, description e canonical no HEAD. Não inserir essas tags no conteúdo HTML. O canonical de cada tradução aponta para ela mesma, não para PT.
+-- [ ] Preservar as imagens Open Graph e o schema aprovado do AIOSEO. Este pacote não inventa avaliações, preços, datas de eventos, dados estruturados de produtos nem troca imagens sociais. Conferir a prévia de compartilhamento com as mídias existentes.
+-- [ ] Verificar qual integração multilíngue está instalada. AIOSEO **não emite hreflang**. Essa função e o `lang` ficam na camada de idiomas do WordPress, sem transferir a ela title, description, canonical ou schema.
+-- [ ] Se essa integração já suporta as páginas existentes, vincular os sete trios pelos IDs do mapa e configurar `pt-BR`, `es`, `en` e `x-default` PT. Não recriar traduções com novos slugs.
+-- [ ] Se não existe integração, o administrador precisa aplicar uma integração server-side limitada aos IDs do mapa: filtro `language_attributes` para o idioma do documento e ação `wp_head` para o arquivo hreflang do ID atual. O pacote fornece dados e tags, não instala PHP nem presume um plugin disponível. Não alterar `document.documentElement.lang` somente por JavaScript.
+-- [ ] Usar UMA única origem de hreflang (plugin de idiomas OU integração de HEAD), nunca ambas. Emitir somente equivalentes publicados, indexáveis e com canonical coerente; se algum não estiver publicado, retirar esse idioma de TODO o trio até liberá-lo.
+-- [ ] Conferir reciprocidade e self-reference no HTML recebido pelo navegador sem executar JavaScript. L&P não pode listar ES/EN como equivalentes.
+-- [ ] Não mudar o idioma global do WordPress para tentar corrigir apenas ES/EN. Homepages e páginas internas precisam receber seu próprio `html lang`.
+-
+-### 4. Conteúdo, CSS e publicação
+-
+-- [ ] Aplicar os fragmentos pelo mapa, manter os mesmos IDs/URLs e não alterar imagens nem textos comerciais.
+-- [ ] Aplicar o CSS final no local atual de CSS adicional, mantendo backup para reversão. Evitar duplicar sucessivas cópias completas.
+-- [ ] Conferir os 22 links de política. Não sobrescrever o conteúdo jurídico com o template ou HTML LPV.
+-- [ ] Conferir que as sete EN estão publicadas, indexáveis e na navegação/sitemap de acordo com a autorização.
+-- [ ] Limpar caches e rever sitemap AIOSEO, canonical, idiomas, robots e previews sociais. A política pode aumentar o total de páginas do sitemap; não exigir exatamente 22 URLs no sitemap inteiro.
+-
+-### 5. Aceite final sem envio real
+-
+-- [ ] Desktop e celular, inclusive 375 px, sem overflow; cabeçalho, menu e rodapé centralizado preservados.
+-- [ ] Navegação por teclado, foco visível no link de privacidade, Escape no menu e zoom real de navegador a 200%.
+-- [ ] Mudança de idioma mantém equivalência e contexto permitido de formulário.
+-- [ ] Formulários mantêm endpoint FormSubmit e campos; não clicar Enviar nesta etapa.
+-- [ ] WhatsApp abre mensagem revisável no idioma/contexto correto; não enviar mensagem.
+-- [ ] Uma única origem de SEO; DOM sem duplicação nativa; lang correto; hreflang recíproco; política responde e é legível.
+-- [ ] GA DebugView e entrega real do FormSubmit ficam para verificação separada autorizada. Não confundir validação local com confirmação de entrega.
+-
+-## Fontes técnicas
+-
+-- [AIOSEO: responsabilidade por hreflang](https://aioseo.com/docs/does-all-in-one-seo-output-hreflang-tags/).
+-- [WordPress: edição, atribuição e precedência de templates](https://wordpress.org/documentation/article/template-editor/).
+-- [WordPress: language_attributes](https://developer.wordpress.org/reference/hooks/language_attributes/) e [wp_head](https://developer.wordpress.org/reference/hooks/wp_head/).
+-
+-## Limites da entrega
+-
+-Nenhuma alteração no WordPress, publicação, envio de formulário, mensagem de WhatsApp ou alteração de credenciais é executada pelo gerador. A configuração de templates/AIOSEO/idiomas e a conferência após limpar cache dependem do painel e do ambiente WordPress. As pendências editoriais não relacionadas registradas na Etapa 3 continuam separadas desta entrega.
++# Etapa 4 - integração e pré-publicação WordPress
++
++Decisões do proprietário: 22/09/2026. Pacote local para revisão; não é publicação automática.
++
++Atualização da Etapa 5: a integração mínima de idiomas está versionada em `wordpress/plugins/lpv-language-seo/`. Consulte `docs/stage-5-language-seo.md` e o README do plugin para testes, instalação manual e rollback. Ela não foi instalada no WordPress.
++
++## Escopo e decisões resolvidas
++
++- Sete páginas EN revisadas e autorizadas para publicação. `status: publish` no mapa representa o estado desejado, não uma alteração remota executada.
++- Yoast removido; somente AIOSEO administra title, description, canonical, Open Graph e schema.
++- Política aprovada e publicada: https://lpvturismo.com/politica-de-privacidade/.
++- Fonte jurídica informada: `LPV_Turismo_Politica_de_Privacidade_Site_2026.md`. Não encontrada neste checkout, em Documentos ou Downloads. Não recriar nem substituir a política publicada.
++- Nenhum texto comercial, endereço de imagem ou integração de formulário foi alterado nesta etapa. Os HTMLs receberam apenas o link jurídico no rodapé.
++- O CSS acrescenta somente quebra de linha, alinhamento e apresentação acessível desse link. A organização do rodapé permanece.
++
++## Inventário e equivalências
++
++`docs/page-map.json` é a fonte dos IDs, caminhos, arquivos, famílias, idiomas e estados desejados. O inventário gerado contém as 22 páginas: oito PT, sete ES e sete EN.
++
++Existem sete famílias completas: homepage, passeios, serviços, formulário, Mosaicos, Tijuca e Rio Essencial. Cada uma tem três equivalentes reais e recebe o mesmo conjunto recíproco de quatro alternates: `pt-BR`, `es`, `en` e `x-default` (PT).
++
++L&P Experiences (ID 255) tem somente PT. Seu canonical, `pt-BR` e `x-default` apontam para `/lp-experiences/`; `es` e `en` são omitidos. Os destinos `/es/servicios/#lp-experiences` e `/en/services/#lp-experiences` são alternativas de navegação, nunca traduções da página L&P nem alternates SEO.
++
++A política é um documento adicional, fora dos 22 fragmentos. Não há traduções jurídicas fornecidas. Todos os rodapés apontam para o mesmo documento PT; ES e EN identificam seu idioma no texto do link e com `hreflang="pt-BR"`.
++
++## Conteúdo do pacote
++
++Gerar novamente após qualquer revisão:
++
++```powershell
++python scripts/build_wordpress_package.py
++python -m unittest discover -s tests -p "test_stage4*.py"
++```
++
++Saída: `publication/stage-4/` e `publication/lpv-wordpress-stage-4.zip`.
++
++- `html/pt`, `html/es`, `html/en`: os 22 fragmentos, idênticos byte a byte às fontes. Aplicar apenas no conteúdo da página correspondente, preservando scripts e estilos inline existentes.
++- `css/lpv-style.css`: CSS completo; idêntico a `css/lpv-style.css` e `docs/lpv-css-para-wordpress.css`.
++- `url-map.json`: IDs WordPress, arquivos e URLs. Não criar novos slugs, redirecionamentos ou páginas duplicadas.
++- `language-map.json`: idioma do documento, canonical, alternates, equivalentes ausentes e distinção entre fallback de navegação e tradução.
++- `aioseo-metadata.json` e `aioseo-metadata.csv`: title, description e canonical finais, extraídos sem alteração da tabela da Etapa 3. CSV é uma planilha de aplicação/conferência manual, NÃO um importador nativo garantido do AIOSEO.
++- `hreflang/{id}.html`: referências das tags com todos os equivalentes publicados. Não inserir no conteúdo e não colar junto com o plugin da Etapa 5, que calcula os equivalentes públicos dinamicamente.
++- `wordpress/lpv-content-only.html`: modelo de template de blocos, não conteúdo da página nem arquivo para substituir o tema inteiro.
++- `CHECKLIST.md`, `REVIEW-REPORT.md`, `PAGE-INVENTORY.md`, `PUBLIC-OBSERVATION.json`, `VALIDATION.json` e `manifest.json`: instruções, evidências e hashes SHA-256 para conferência.
++
++## Aplicação manual no WordPress
++
++### 1. Backup e staging
++
++- [ ] Exportar conteúdo, banco, templates personalizados, configurações AIOSEO e CSS adicional. Preservar um backup anterior por item alterado.
++- [ ] Aplicar primeiro em staging. Não rodar `export_public_pages.py` sobre fontes revisadas como substituição do pacote.
++- [ ] Conferir os 22 IDs e URLs no painel. As sete EN têm publicação autorizada; não pedir nova decisão editorial. Não alterar a página jurídica.
++
++### 2. Template: retirar a causa da duplicidade
++
++O código do template salvo no banco não está versionado neste repositório. O DOM público permite identificar os elementos, mas não confirmar o nome do template escolhido no painel. Conferir a atribuição antes de editar.
++
++1. Em **Aparência > Editor > Design > Modelos/Templates**, criar um template próprio chamado **LPV - Conteúdo completo**, usando o modelo do pacote. Atribuí-lo SOMENTE às 22 páginas do inventário. Não editar globalmente os templates de posts, política, busca, arquivo ou erro 404.
++2. Na visualização em lista, remover as referências a **Header/Cabeçalho** e **Footer/Rodapé** (`core/template-part`, normalmente `slug: header` e `slug: footer`). Remover a referência no template, não apagar a parte compartilhada da biblioteca.
++3. Remover **Post Title/Título do post** (`core/post-title`), responsável por `.wp-block-post-title`. Não apagar o H1 existente dentro do HTML LPV.
++4. Retirar blocos **Spacer/Espaçador** e grupos vazios que serviam apenas aos três blocos removidos. No grupo principal, definir margem, padding e espaçamento entre blocos como zero, largura completa e sem largura restrita herdada.
++5. Manter exatamente um **Post Content/Conteúdo do post** (`core/post-content`), que renderiza o HTML salvo. Não copiar o HTML comercial para dentro do template.
++6. Manter um único `main` no template. Os fragmentos LPV já não contêm outro `main`. Preservar `header.topbar` e `footer.lpv-site-footer` internos ao conteúdo. Verificar o destino do skip link gerado pelo WordPress.
++7. Na homepage PT, verificar **Front Page/Página inicial**: quando existe, esse template tem precedência. Aplicar nele a mesma estrutura somente de conteúdo. Conferir também templates específicos por página; uma atribuição genérica pode não prevalecer.
++8. Publicar o template apenas na janela de publicação aprovada, limpar LiteSpeed e inspecionar o código-fonte sem depender do CSS. Resultado esperado em cada página: zero `.wp-block-post-title`, zero `header.wp-block-template-part`, zero `footer.wp-block-template-part`, um H1 e um main.
++
++O CSS defensivo existente foi preservado para não quebrar o site antes dessa aplicação. Ele não substitui a remoção dos blocos. Há regras antigas amplas em `body.wp-singular`; verificar separadamente a página jurídica, que não faz parte do pacote, antes de remover ou restringir essas regras em outra revisão.
++
++### 3. AIOSEO e idiomas
++
++- [ ] Confirmar AIOSEO ativo e Yoast ausente; limpar cache antigo. Não instalar outro plugin SEO.
++- [ ] Para cada ID, aplicar title e description literais da tabela final no painel AIOSEO. Evitar smart tags que acrescentem novamente o nome do site. Configurar canonical absoluto, sem parâmetros como `?experience=` ou `?success=`.
++- [ ] Conferir um único title, description e canonical no HEAD. Não inserir essas tags no conteúdo HTML. O canonical de cada tradução aponta para ela mesma, não para PT.
++- [ ] Preservar as imagens Open Graph e o schema aprovado do AIOSEO. Este pacote não inventa avaliações, preços, datas de eventos, dados estruturados de produtos nem troca imagens sociais. Conferir a prévia de compartilhamento com as mídias existentes.
++- [ ] Verificar qual integração multilíngue está instalada. AIOSEO **não emite hreflang**. Essa função e o `lang` ficam na camada de idiomas do WordPress, sem transferir a ela title, description, canonical ou schema.
++- [ ] Se essa integração já suporta as páginas existentes, vincular os sete trios pelos IDs do mapa e configurar `pt-BR`, `es`, `en` e `x-default` PT. Não recriar traduções com novos slugs.
++- [ ] Se não existe integração concorrente, aplicar manualmente o plugin **LPV Language SEO** da Etapa 5. Ele usa `language_attributes` e `wp_head`, confere status/permalink real e não emite metadados do AIOSEO. Não exige colar tags estáticas nem alterar `document.documentElement.lang` por JavaScript. Instalação e ativação permanecem manuais.
++- [ ] Usar UMA única origem de hreflang (plugin de idiomas OU integração de HEAD), nunca ambas. Emitir somente equivalentes publicados, indexáveis e com canonical coerente; se algum não estiver publicado, retirar esse idioma de TODO o trio até liberá-lo.
++- [ ] Conferir reciprocidade e self-reference no HTML recebido pelo navegador sem executar JavaScript. L&P não pode listar ES/EN como equivalentes.
++- [ ] Não mudar o idioma global do WordPress para tentar corrigir apenas ES/EN. Homepages e páginas internas precisam receber seu próprio `html lang`.
++
++### 4. Conteúdo, CSS e publicação
++
++- [ ] Aplicar os fragmentos pelo mapa, manter os mesmos IDs/URLs e não alterar imagens nem textos comerciais.
++- [ ] Aplicar o CSS final no local atual de CSS adicional, mantendo backup para reversão. Evitar duplicar sucessivas cópias completas.
++- [ ] Conferir os 22 links de política. Não sobrescrever o conteúdo jurídico com o template ou HTML LPV.
++- [ ] Conferir que as sete EN estão publicadas, indexáveis e na navegação/sitemap de acordo com a autorização.
++- [ ] Limpar caches e rever sitemap AIOSEO, canonical, idiomas, robots e previews sociais. A política pode aumentar o total de páginas do sitemap; não exigir exatamente 22 URLs no sitemap inteiro.
++
++### 5. Aceite final sem envio real
++
++- [ ] Desktop e celular, inclusive 375 px, sem overflow; cabeçalho, menu e rodapé centralizado preservados.
++- [ ] Navegação por teclado, foco visível no link de privacidade, Escape no menu e zoom real de navegador a 200%.
++- [ ] Mudança de idioma mantém equivalência e contexto permitido de formulário.
++- [ ] Formulários mantêm endpoint FormSubmit e campos; não clicar Enviar nesta etapa.
++- [ ] WhatsApp abre mensagem revisável no idioma/contexto correto; não enviar mensagem.
++- [ ] Uma única origem de SEO; DOM sem duplicação nativa; lang correto; hreflang recíproco; política responde e é legível.
++- [ ] GA DebugView e entrega real do FormSubmit ficam para verificação separada autorizada. Não confundir validação local com confirmação de entrega.
++
++## Fontes técnicas
++
++- [AIOSEO: responsabilidade por hreflang](https://aioseo.com/docs/does-all-in-one-seo-output-hreflang-tags/).
++- [WordPress: edição, atribuição e precedência de templates](https://wordpress.org/documentation/article/template-editor/).
++- [WordPress: language_attributes](https://developer.wordpress.org/reference/hooks/language_attributes/) e [wp_head](https://developer.wordpress.org/reference/hooks/wp_head/).
++
++## Limites da entrega
++
++Nenhuma alteração no WordPress, publicação, envio de formulário, mensagem de WhatsApp ou alteração de credenciais é executada pelo gerador. A configuração de templates/AIOSEO/idiomas e a conferência após limpar cache dependem do painel e do ambiente WordPress. As pendências editoriais não relacionadas registradas na Etapa 3 continuam separadas desta entrega.
+diff --git a/.gitattributes b/.gitattributes
+new file mode 100644
+--- /dev/null
++++ b/.gitattributes
+@@ -0,0 +1,10 @@
++*.php text eol=lf
++*.py text eol=lf
++*.html text eol=lf
++*.css text eol=lf
++*.md text eol=lf
++*.json text eol=lf
++*.diff text eol=lf
++.gitattributes text eol=lf
++# Keep generated archives and their manifest-checked contents byte-identical.
++publication/** -text whitespace=cr-at-eol

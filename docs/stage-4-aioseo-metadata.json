@@ -1,0 +1,178 @@
+[
+  {
+    "id": 7,
+    "url": "/",
+    "lang": "pt-BR",
+    "title": "LPV Turismo - Experiências guiadas no Rio",
+    "description": "Descubra o Rio com roteiros culturais e naturais, curadoria local e atendimento em português, espanhol ou inglês.",
+    "canonical": "https://lpvturismo.com/"
+  },
+  {
+    "id": 17,
+    "url": "/passeios/",
+    "lang": "pt-BR",
+    "title": "Passeios no Rio de Janeiro - LPV Turismo",
+    "description": "Compare experiências guiadas de cultura, natureza e paisagem e solicite uma proposta adequada ao seu grupo.",
+    "canonical": "https://lpvturismo.com/passeios/"
+  },
+  {
+    "id": 18,
+    "url": "/outros-servicos/",
+    "lang": "pt-BR",
+    "title": "Serviços turísticos no Rio - LPV Turismo",
+    "description": "Transfers, apoio local, experiências privadas e soluções personalizadas para sua viagem ao Rio de Janeiro.",
+    "canonical": "https://lpvturismo.com/outros-servicos/"
+  },
+  {
+    "id": 255,
+    "url": "/lp-experiences/",
+    "lang": "pt-BR",
+    "title": "L&P Experiences - Business trips e missões",
+    "description": "Jornadas profissionais para grupos, combinando objetivos de negócio, cultura, conexões e curadoria no destino.",
+    "canonical": "https://lpvturismo.com/lp-experiences/"
+  },
+  {
+    "id": 19,
+    "url": "/quero-montar-meu-roteiro/",
+    "lang": "pt-BR",
+    "title": "Solicite uma proposta - LPV Turismo",
+    "description": "Conte sobre sua viagem, grupo e interesses para solicitar uma proposta personalizada. O envio não confirma reserva.",
+    "canonical": "https://lpvturismo.com/quero-montar-meu-roteiro/"
+  },
+  {
+    "id": 84,
+    "url": "/passeios/mosaicos-do-rio/",
+    "lang": "pt-BR",
+    "title": "Mosaicos do Rio - Experiência urbana guiada",
+    "description": "Arte, arquitetura, fotografia e vida cotidiana em uma experiência urbana adaptável ao perfil do grupo.",
+    "canonical": "https://lpvturismo.com/passeios/mosaicos-do-rio/"
+  },
+  {
+    "id": 85,
+    "url": "/passeios/imersao-floresta-da-tijuca/",
+    "lang": "pt-BR",
+    "title": "Imersão na Floresta da Tijuca - LPV Turismo",
+    "description": "Natureza, paisagem e história ambiental em uma experiência guiada adaptada ao ritmo do grupo.",
+    "canonical": "https://lpvturismo.com/passeios/imersao-floresta-da-tijuca/"
+  },
+  {
+    "id": 86,
+    "url": "/passeios/rio-essencial/",
+    "lang": "pt-BR",
+    "title": "Rio Essencial - Passeio guiado no Rio",
+    "description": "Uma leitura guiada dos ícones, da paisagem e da história do Rio, com percurso definido antes da confirmação.",
+    "canonical": "https://lpvturismo.com/passeios/rio-essencial/"
+  },
+  {
+    "id": 20,
+    "url": "/es/",
+    "lang": "es",
+    "title": "LPV Turismo - Experiencias guiadas en Río",
+    "description": "Descubrí Río con recorridos culturales y naturales, curaduría local y atención en español, portugués o inglés.",
+    "canonical": "https://lpvturismo.com/es/"
+  },
+  {
+    "id": 237,
+    "url": "/es/paseos/",
+    "lang": "es",
+    "title": "Paseos en Río de Janeiro - LPV Turismo",
+    "description": "Compará experiencias guiadas de cultura, naturaleza y paisaje y solicitá una propuesta para tu grupo.",
+    "canonical": "https://lpvturismo.com/es/paseos/"
+  },
+  {
+    "id": 205,
+    "url": "/es/servicios/",
+    "lang": "es",
+    "title": "Servicios turísticos en Río - LPV Turismo",
+    "description": "Transfers, apoyo local, experiencias privadas y soluciones personalizadas para tu viaje a Río de Janeiro.",
+    "canonical": "https://lpvturismo.com/es/servicios/"
+  },
+  {
+    "id": 203,
+    "url": "/es/quiero-armar-mi-itinerario/",
+    "lang": "es",
+    "title": "Solicitá una propuesta - LPV Turismo",
+    "description": "Contanos sobre tu viaje, grupo e intereses para solicitar una propuesta. El envío no confirma una reserva.",
+    "canonical": "https://lpvturismo.com/es/quiero-armar-mi-itinerario/"
+  },
+  {
+    "id": 160,
+    "url": "/es/mosaicos-del-rio/",
+    "lang": "es",
+    "title": "Mosaicos de Río - Experiencia urbana guiada",
+    "description": "Arte, arquitectura, fotografía y vida cotidiana en una experiencia urbana adaptable al perfil del grupo.",
+    "canonical": "https://lpvturismo.com/es/mosaicos-del-rio/"
+  },
+  {
+    "id": 194,
+    "url": "/es/inmersion-floresta-da-tijuca/",
+    "lang": "es",
+    "title": "Inmersión en la Floresta da Tijuca - LPV",
+    "description": "Naturaleza, paisaje e historia ambiental en una experiencia guiada adaptada al ritmo del grupo.",
+    "canonical": "https://lpvturismo.com/es/inmersion-floresta-da-tijuca/"
+  },
+  {
+    "id": 195,
+    "url": "/es/rio-esencial/",
+    "lang": "es",
+    "title": "Río Esencial - Paseo guiado en Río",
+    "description": "Una lectura guiada de los íconos, el paisaje y la historia de Río, con recorrido definido antes de confirmar.",
+    "canonical": "https://lpvturismo.com/es/rio-esencial/"
+  },
+  {
+    "id": 21,
+    "url": "/en/",
+    "lang": "en",
+    "title": "LPV Turismo - Guided experiences in Rio",
+    "description": "Discover Rio through cultural and nature-focused itineraries with local curation in English, Portuguese or Spanish.",
+    "canonical": "https://lpvturismo.com/en/"
+  },
+  {
+    "id": 239,
+    "url": "/en/tours/",
+    "lang": "en",
+    "title": "Tours in Rio de Janeiro - LPV Turismo",
+    "description": "Compare guided culture, nature and landscape experiences and request a proposal suited to your group.",
+    "canonical": "https://lpvturismo.com/en/tours/"
+  },
+  {
+    "id": 217,
+    "url": "/en/services/",
+    "lang": "en",
+    "title": "Travel services in Rio - LPV Turismo",
+    "description": "Transfers, local support, private experiences and tailored solutions for your trip to Rio de Janeiro.",
+    "canonical": "https://lpvturismo.com/en/services/"
+  },
+  {
+    "id": 218,
+    "url": "/en/plan-my-itinerary/",
+    "lang": "en",
+    "title": "Request a proposal - LPV Turismo",
+    "description": "Tell us about your trip, group and interests to request a tailored proposal. Submission does not confirm a booking.",
+    "canonical": "https://lpvturismo.com/en/plan-my-itinerary/"
+  },
+  {
+    "id": 219,
+    "url": "/en/mosaics-of-rio/",
+    "lang": "en",
+    "title": "Mosaics of Rio - Guided urban experience",
+    "description": "Art, architecture, photography and everyday life in an urban experience adapted to your group's profile.",
+    "canonical": "https://lpvturismo.com/en/mosaics-of-rio/"
+  },
+  {
+    "id": 220,
+    "url": "/en/tijuca-forest-immersion/",
+    "lang": "en",
+    "title": "Tijuca Forest Immersion - LPV Turismo",
+    "description": "Nature, landscape and environmental history in a guided experience adapted to the group's pace.",
+    "canonical": "https://lpvturismo.com/en/tijuca-forest-immersion/"
+  },
+  {
+    "id": 221,
+    "url": "/en/rio-essential/",
+    "lang": "en",
+    "title": "Rio Essential - Guided tour in Rio",
+    "description": "A guided reading of Rio's landmarks, landscape and history, with the route agreed before confirmation.",
+    "canonical": "https://lpvturismo.com/en/rio-essential/"
+  }
+]

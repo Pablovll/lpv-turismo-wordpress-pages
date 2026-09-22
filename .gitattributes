@@ -1,0 +1,10 @@
+*.php text eol=lf
+*.py text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.diff text eol=lf
+.gitattributes text eol=lf
+# Keep generated archives and their manifest-checked contents byte-identical.
+publication/** -text whitespace=cr-at-eol

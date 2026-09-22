@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "archive": "lpv-language-seo-1.0.0.zip",
+  "archive_sha256": "fe9163b94f809174c835fa8255ea9fda44e6ca8633a50289491a96cd33065172",
+  "files": {
+    "lpv-language-seo/lpv-language-seo.php": "4aa99a670f142a6609da4c7ff435584c90eb24b3f9825de2908b15215535ac80",
+    "lpv-language-seo/README.md": "6216138b3a81fb81da94f4d0cc77a5a1cbb20b2f51c123f82882e94bc1816d98"
+  },
+  "installation": "Manual only. Not installed or activated on WordPress."
+}

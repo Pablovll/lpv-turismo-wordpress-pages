@@ -1,0 +1,466 @@
+{
+  "checked_at_utc": "2026-09-22T13:50:45.893290+00:00",
+  "method": "Unauthenticated HTTP GET only. Status 200 does not prove WP publish status.",
+  "pages": [
+    {
+      "requested_url": "https://lpvturismo.com/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/",
+      "lang": "pt-BR",
+      "title": "LPV Turismo — Rio além do óbvio - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 2,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/passeios/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/passeios/",
+      "lang": "pt-BR",
+      "title": "Passeios - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/passeios/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/outros-servicos/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/outros-servicos/",
+      "lang": "pt-BR",
+      "title": "Outros servi?os - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/outros-servicos/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/lp-experiences/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/lp-experiences/",
+      "lang": "pt-BR",
+      "title": "L&P Experiences - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/lp-experiences/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 2,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/quero-montar-meu-roteiro/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/quero-montar-meu-roteiro/",
+      "lang": "pt-BR",
+      "title": "Quero montar meu roteiro - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/quero-montar-meu-roteiro/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/passeios/mosaicos-do-rio/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/passeios/mosaicos-do-rio/",
+      "lang": "pt-BR",
+      "title": "Mosaico do rio - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/passeios/mosaicos-do-rio/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/passeios/imersao-floresta-da-tijuca/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/passeios/imersao-floresta-da-tijuca/",
+      "lang": "pt-BR",
+      "title": "Imersão na Floresta da Tijuca - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/passeios/imersao-floresta-da-tijuca/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/passeios/rio-essencial/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/passeios/rio-essencial/",
+      "lang": "pt-BR",
+      "title": "Rio Essencial - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/passeios/rio-essencial/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/es/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/es/",
+      "lang": "pt-BR",
+      "title": "LPV Turismo — Español - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/es/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 2,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/es/paseos/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/es/paseos/",
+      "lang": "pt-BR",
+      "title": "Paseos - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/es/paseos/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/es/servicios/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/es/servicios/",
+      "lang": "pt-BR",
+      "title": "Servicios - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/es/servicios/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/es/quiero-armar-mi-itinerario/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/es/quiero-armar-mi-itinerario/",
+      "lang": "pt-BR",
+      "title": "Quiero armar mi itinerario - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/es/quiero-armar-mi-itinerario/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/es/mosaicos-del-rio/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/es/mosaicos-del-rio/",
+      "lang": "pt-BR",
+      "title": "Mosaicos del Río - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/es/mosaicos-del-rio/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/es/inmersion-floresta-da-tijuca/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/es/inmersion-floresta-da-tijuca/",
+      "lang": "pt-BR",
+      "title": "Inmersión en la Floresta da Tijuca - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/es/inmersion-floresta-da-tijuca/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/es/rio-esencial/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/es/rio-esencial/",
+      "lang": "pt-BR",
+      "title": "Río Esencial - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/es/rio-esencial/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/en/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/en/",
+      "lang": "pt-BR",
+      "title": "LPV Turismo – English - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/en/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 2,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/en/tours/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/en/tours/",
+      "lang": "pt-BR",
+      "title": "Tours - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/en/tours/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/en/services/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/en/services/",
+      "lang": "pt-BR",
+      "title": "Other services - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/en/services/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/en/plan-my-itinerary/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/en/plan-my-itinerary/",
+      "lang": "pt-BR",
+      "title": "I want to plan my itinerary - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/en/plan-my-itinerary/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/en/mosaics-of-rio/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/en/mosaics-of-rio/",
+      "lang": "pt-BR",
+      "title": "Mosaics of Rio - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/en/mosaics-of-rio/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/en/tijuca-forest-immersion/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/en/tijuca-forest-immersion/",
+      "lang": "pt-BR",
+      "title": "Tijuca Forest Immersion - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/en/tijuca-forest-immersion/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/en/rio-essential/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/en/rio-essential/",
+      "lang": "pt-BR",
+      "title": "Rio Essential - LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/en/rio-essential/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 1,
+      "custom_footers": 1,
+      "h1_count": 2,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    },
+    {
+      "requested_url": "https://lpvturismo.com/politica-de-privacidade/",
+      "http_status": 200,
+      "final_url": "https://lpvturismo.com/politica-de-privacidade/",
+      "lang": "pt-BR",
+      "title": "Política de Privacidade | LPV Turismo",
+      "canonical": [
+        "https://lpvturismo.com/politica-de-privacidade/"
+      ],
+      "hreflang": [],
+      "native_post_titles": 1,
+      "native_headers": 1,
+      "native_footers": 1,
+      "custom_headers": 0,
+      "custom_footers": 0,
+      "h1_count": 1,
+      "main_count": 1,
+      "aioseo_marker": true,
+      "yoast_marker": false
+    }
+  ]
+}

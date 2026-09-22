@@ -1,33 +1,263 @@
 {
-  "site": "https://www.lpvturismo.com",
+  "site": "https://lpvturismo.com",
   "css_source": "WordPress > Aparência > Personalizar > CSS adicional",
+  "publication_state": {
+    "source_of_truth": "WordPress page status; verify in the dashboard before release",
+    "approval_date": "2026-09-22",
+    "en_intended_status": "publish",
+    "en_owner_approved": true,
+    "automatic_publication": false,
+    "status_field_semantics": "Desired release status, not a claim of remote publication",
+    "public_observation_2026_09_22": "The seven English URLs were publicly reachable during stage 3. The owner has now approved all seven for publication."
+  },
+  "language_equivalents": {
+    "home": {
+      "pt": "/",
+      "es": "/es/",
+      "en": "/en/"
+    },
+    "tours": {
+      "pt": "/passeios/",
+      "es": "/es/paseos/",
+      "en": "/en/tours/"
+    },
+    "services": {
+      "pt": "/outros-servicos/",
+      "es": "/es/servicios/",
+      "en": "/en/services/"
+    },
+    "itinerary_form": {
+      "pt": "/quero-montar-meu-roteiro/",
+      "es": "/es/quiero-armar-mi-itinerario/",
+      "en": "/en/plan-my-itinerary/"
+    },
+    "mosaics": {
+      "pt": "/passeios/mosaicos-do-rio/",
+      "es": "/es/mosaicos-del-rio/",
+      "en": "/en/mosaics-of-rio/"
+    },
+    "tijuca_forest": {
+      "pt": "/passeios/imersao-floresta-da-tijuca/",
+      "es": "/es/inmersion-floresta-da-tijuca/",
+      "en": "/en/tijuca-forest-immersion/"
+    },
+    "rio_essential": {
+      "pt": "/passeios/rio-essencial/",
+      "es": "/es/rio-esencial/",
+      "en": "/en/rio-essential/"
+    },
+    "lp_experiences": {
+      "pt": {
+        "url": "/lp-experiences/",
+        "fallback": false
+      },
+      "es": {
+        "url": "/es/servicios/#lp-experiences",
+        "fallback": true
+      },
+      "en": {
+        "url": "/en/services/#lp-experiences",
+        "fallback": true
+      }
+    }
+  },
   "pages": {
     "pt": {
-      "home": {"id": 7, "url": "/"},
-      "passeios": {"id": 17, "url": "/passeios/"},
-      "outros_servicos": {"id": 18, "url": "/outros-servicos/"},
-      "quero_montar_meu_roteiro": {"id": 19, "url": "/quero-montar-meu-roteiro/"},
-      "mosaicos_do_rio": {"id": 84, "url": "/passeios/mosaicos-do-rio/"},
-      "floresta_da_tijuca": {"id": 85, "url": "/passeios/imersao-floresta-da-tijuca/"},
-      "rio_essencial": {"id": 86, "url": "/passeios/rio-essencial/"}
+      "home": {
+        "id": 7,
+        "url": "/",
+        "source": "pages/pt/7-lpv-turismo-rio-alem-do-obvio.html",
+        "lang": "pt-BR",
+        "status": "publish",
+        "family": "home"
+      },
+      "passeios": {
+        "id": 17,
+        "url": "/passeios/",
+        "source": "pages/pt/17-passeios.html",
+        "lang": "pt-BR",
+        "status": "publish",
+        "family": "tours"
+      },
+      "outros_servicos": {
+        "id": 18,
+        "url": "/outros-servicos/",
+        "source": "pages/pt/18-outros-servicos.html",
+        "lang": "pt-BR",
+        "status": "publish",
+        "family": "services"
+      },
+      "lp_experiences": {
+        "id": 255,
+        "url": "/lp-experiences/",
+        "source": "pages/pt/lp-experiences.html",
+        "lang": "pt-BR",
+        "status": "publish",
+        "family": "lp_experiences"
+      },
+      "quero_montar_meu_roteiro": {
+        "id": 19,
+        "url": "/quero-montar-meu-roteiro/",
+        "source": "pages/pt/19-quero-montar-meu-roteiro.html",
+        "lang": "pt-BR",
+        "status": "publish",
+        "family": "itinerary_form"
+      },
+      "mosaicos_do_rio": {
+        "id": 84,
+        "url": "/passeios/mosaicos-do-rio/",
+        "source": "pages/pt/84-mosaicos-do-rio.html",
+        "lang": "pt-BR",
+        "status": "publish",
+        "family": "mosaics"
+      },
+      "floresta_da_tijuca": {
+        "id": 85,
+        "url": "/passeios/imersao-floresta-da-tijuca/",
+        "source": "pages/pt/85-imersao-floresta-da-tijuca.html",
+        "lang": "pt-BR",
+        "status": "publish",
+        "family": "tijuca_forest"
+      },
+      "rio_essencial": {
+        "id": 86,
+        "url": "/passeios/rio-essencial/",
+        "source": "pages/pt/86-rio-essencial.html",
+        "lang": "pt-BR",
+        "status": "publish",
+        "family": "rio_essential"
+      }
     },
     "es": {
-      "home": {"id": 20, "url": "/es/"},
-      "paseos": {"id": 237, "url": "/es/paseos/"},
-      "servicios": {"id": 205, "url": "/es/servicios/"},
-      "quiero_armar_mi_itinerario": {"id": 203, "url": "/es/quiero-armar-mi-itinerario/"},
-      "mosaicos_del_rio": {"id": 160, "url": "/es/mosaicos-del-rio/"},
-      "inmersion_floresta_da_tijuca": {"id": 194, "url": "/es/inmersion-floresta-da-tijuca/"},
-      "rio_esencial": {"id": 195, "url": "/es/rio-esencial/"}
+      "home": {
+        "id": 20,
+        "url": "/es/",
+        "source": "pages/es/20-es.html",
+        "lang": "es",
+        "status": "publish",
+        "family": "home"
+      },
+      "paseos": {
+        "id": 237,
+        "url": "/es/paseos/",
+        "source": "pages/es/paseos.html",
+        "lang": "es",
+        "status": "publish",
+        "family": "tours"
+      },
+      "servicios": {
+        "id": 205,
+        "url": "/es/servicios/",
+        "source": "pages/es/205-servicios.html",
+        "lang": "es",
+        "status": "publish",
+        "family": "services"
+      },
+      "quiero_armar_mi_itinerario": {
+        "id": 203,
+        "url": "/es/quiero-armar-mi-itinerario/",
+        "source": "pages/es/203-quiero-armar-mi-itinerario.html",
+        "lang": "es",
+        "status": "publish",
+        "family": "itinerary_form"
+      },
+      "mosaicos_del_rio": {
+        "id": 160,
+        "url": "/es/mosaicos-del-rio/",
+        "source": "pages/es/160-mosaicos-del-rio.html",
+        "lang": "es",
+        "status": "publish",
+        "family": "mosaics"
+      },
+      "inmersion_floresta_da_tijuca": {
+        "id": 194,
+        "url": "/es/inmersion-floresta-da-tijuca/",
+        "source": "pages/es/194-inmersion-floresta-da-tijuca.html",
+        "lang": "es",
+        "status": "publish",
+        "family": "tijuca_forest"
+      },
+      "rio_esencial": {
+        "id": 195,
+        "url": "/es/rio-esencial/",
+        "source": "pages/es/195-rio-esencial.html",
+        "lang": "es",
+        "status": "publish",
+        "family": "rio_essential"
+      }
     },
     "en": {
-      "home": {"id": 21, "url": "/en/"},
-      "tours": {"id": 239, "url": "/en/tours/", "status": "draft"},
-      "services": {"id": 217, "url": "/en/services/", "status": "draft"},
-      "plan_my_itinerary": {"id": 218, "url": "/en/plan-my-itinerary/", "status": "draft"},
-      "mosaics_of_rio": {"id": 219, "url": "/en/mosaics-of-rio/", "status": "draft"},
-      "tijuca_forest_immersion": {"id": 220, "url": "/en/tijuca-forest-immersion/", "status": "draft"},
-      "rio_essential": {"id": 221, "url": "/en/rio-essential/", "status": "draft"}
+      "home": {
+        "id": 21,
+        "url": "/en/",
+        "status": "publish",
+        "source": "pages/en/21-en.html",
+        "lang": "en",
+        "family": "home"
+      },
+      "tours": {
+        "id": 239,
+        "url": "/en/tours/",
+        "status": "publish",
+        "source": "pages/en/tours.html",
+        "lang": "en",
+        "family": "tours"
+      },
+      "services": {
+        "id": 217,
+        "url": "/en/services/",
+        "status": "publish",
+        "source": "pages/en/services.html",
+        "lang": "en",
+        "family": "services"
+      },
+      "plan_my_itinerary": {
+        "id": 218,
+        "url": "/en/plan-my-itinerary/",
+        "status": "publish",
+        "source": "pages/en/plan-my-itinerary.html",
+        "lang": "en",
+        "family": "itinerary_form"
+      },
+      "mosaics_of_rio": {
+        "id": 219,
+        "url": "/en/mosaics-of-rio/",
+        "status": "publish",
+        "source": "pages/en/mosaics-of-rio.html",
+        "lang": "en",
+        "family": "mosaics"
+      },
+      "tijuca_forest_immersion": {
+        "id": 220,
+        "url": "/en/tijuca-forest-immersion/",
+        "status": "publish",
+        "source": "pages/en/tijuca-forest-immersion.html",
+        "lang": "en",
+        "family": "tijuca_forest"
+      },
+      "rio_essential": {
+        "id": 221,
+        "url": "/en/rio-essential/",
+        "status": "publish",
+        "source": "pages/en/rio-essential.html",
+        "lang": "en",
+        "family": "rio_essential"
+      }
     }
+  },
+  "seo": {
+    "owner": "AIOSEO",
+    "yoast_removed_by_owner": true,
+    "canonical_origin": "https://lpvturismo.com",
+    "hreflang_owner": "WordPress language integration, separate from AIOSEO title/description/canonical output"
+  },
+  "privacy": {
+    "url": "/politica-de-privacidade/",
+    "lang": "pt-BR",
+    "owner_approved": true,
+    "owner_reported_status": "publish",
+    "editable_source": "LPV_Turismo_Politica_de_Privacidade_Site_2026.md",
+    "editable_source_in_repository": false,
+    "outside_22_page_package": true
   }
 }

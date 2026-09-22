@@ -1,0 +1,186 @@
+{
+  "scope": "Local structural validation, not W3C certification or WordPress runtime tests",
+  "pages": [
+    {
+      "id": 7,
+      "source": "pages/pt/7-lpv-turismo-rio-alem-do-obvio.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 17,
+      "source": "pages/pt/17-passeios.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 18,
+      "source": "pages/pt/18-outros-servicos.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 255,
+      "source": "pages/pt/lp-experiences.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 19,
+      "source": "pages/pt/19-quero-montar-meu-roteiro.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 84,
+      "source": "pages/pt/84-mosaicos-do-rio.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 85,
+      "source": "pages/pt/85-imersao-floresta-da-tijuca.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 86,
+      "source": "pages/pt/86-rio-essencial.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 20,
+      "source": "pages/es/20-es.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 237,
+      "source": "pages/es/paseos.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 205,
+      "source": "pages/es/205-servicios.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 203,
+      "source": "pages/es/203-quiero-armar-mi-itinerario.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 160,
+      "source": "pages/es/160-mosaicos-del-rio.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 194,
+      "source": "pages/es/194-inmersion-floresta-da-tijuca.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 195,
+      "source": "pages/es/195-rio-esencial.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 21,
+      "source": "pages/en/21-en.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 239,
+      "source": "pages/en/tours.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 217,
+      "source": "pages/en/services.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 218,
+      "source": "pages/en/plan-my-itinerary.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 219,
+      "source": "pages/en/mosaics-of-rio.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 220,
+      "source": "pages/en/tijuca-forest-immersion.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    },
+    {
+      "id": 221,
+      "source": "pages/en/rio-essential.html",
+      "tag_balance": "pass",
+      "privacy_link": "pass",
+      "unique_ids": "pass",
+      "single_h1_header_footer": "pass"
+    }
+  ],
+  "metadata_rows": 22,
+  "reciprocal_hreflang": "pass",
+  "css_copies_identical": true,
+  "forms_submitted": 0,
+  "wordpress_writes": 0
+}

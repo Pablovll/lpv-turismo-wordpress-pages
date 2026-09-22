@@ -1,0 +1,371 @@
+{
+  "approval_date": "2026-09-22",
+  "application": "Prepared only; apply on WordPress after review. Never advertise drafts.",
+  "pages": [
+    {
+      "id": 7,
+      "source": "pages/pt/7-lpv-turismo-rio-alem-do-obvio.html",
+      "url": "/",
+      "family": "home",
+      "lang": "pt-BR",
+      "canonical": "https://lpvturismo.com/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/",
+        "es": "https://lpvturismo.com/es/",
+        "en": "https://lpvturismo.com/en/",
+        "x-default": "https://lpvturismo.com/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 17,
+      "source": "pages/pt/17-passeios.html",
+      "url": "/passeios/",
+      "family": "tours",
+      "lang": "pt-BR",
+      "canonical": "https://lpvturismo.com/passeios/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/passeios/",
+        "es": "https://lpvturismo.com/es/paseos/",
+        "en": "https://lpvturismo.com/en/tours/",
+        "x-default": "https://lpvturismo.com/passeios/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 18,
+      "source": "pages/pt/18-outros-servicos.html",
+      "url": "/outros-servicos/",
+      "family": "services",
+      "lang": "pt-BR",
+      "canonical": "https://lpvturismo.com/outros-servicos/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/outros-servicos/",
+        "es": "https://lpvturismo.com/es/servicios/",
+        "en": "https://lpvturismo.com/en/services/",
+        "x-default": "https://lpvturismo.com/outros-servicos/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 255,
+      "source": "pages/pt/lp-experiences.html",
+      "url": "/lp-experiences/",
+      "family": "lp_experiences",
+      "lang": "pt-BR",
+      "canonical": "https://lpvturismo.com/lp-experiences/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/lp-experiences/",
+        "x-default": "https://lpvturismo.com/lp-experiences/"
+      },
+      "missing_direct_equivalents": [
+        "es",
+        "en"
+      ],
+      "navigation_fallbacks_not_hreflang": {
+        "es": "/es/servicios/#lp-experiences",
+        "en": "/en/services/#lp-experiences"
+      }
+    },
+    {
+      "id": 19,
+      "source": "pages/pt/19-quero-montar-meu-roteiro.html",
+      "url": "/quero-montar-meu-roteiro/",
+      "family": "itinerary_form",
+      "lang": "pt-BR",
+      "canonical": "https://lpvturismo.com/quero-montar-meu-roteiro/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/quero-montar-meu-roteiro/",
+        "es": "https://lpvturismo.com/es/quiero-armar-mi-itinerario/",
+        "en": "https://lpvturismo.com/en/plan-my-itinerary/",
+        "x-default": "https://lpvturismo.com/quero-montar-meu-roteiro/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 84,
+      "source": "pages/pt/84-mosaicos-do-rio.html",
+      "url": "/passeios/mosaicos-do-rio/",
+      "family": "mosaics",
+      "lang": "pt-BR",
+      "canonical": "https://lpvturismo.com/passeios/mosaicos-do-rio/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/passeios/mosaicos-do-rio/",
+        "es": "https://lpvturismo.com/es/mosaicos-del-rio/",
+        "en": "https://lpvturismo.com/en/mosaics-of-rio/",
+        "x-default": "https://lpvturismo.com/passeios/mosaicos-do-rio/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 85,
+      "source": "pages/pt/85-imersao-floresta-da-tijuca.html",
+      "url": "/passeios/imersao-floresta-da-tijuca/",
+      "family": "tijuca_forest",
+      "lang": "pt-BR",
+      "canonical": "https://lpvturismo.com/passeios/imersao-floresta-da-tijuca/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/passeios/imersao-floresta-da-tijuca/",
+        "es": "https://lpvturismo.com/es/inmersion-floresta-da-tijuca/",
+        "en": "https://lpvturismo.com/en/tijuca-forest-immersion/",
+        "x-default": "https://lpvturismo.com/passeios/imersao-floresta-da-tijuca/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 86,
+      "source": "pages/pt/86-rio-essencial.html",
+      "url": "/passeios/rio-essencial/",
+      "family": "rio_essential",
+      "lang": "pt-BR",
+      "canonical": "https://lpvturismo.com/passeios/rio-essencial/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/passeios/rio-essencial/",
+        "es": "https://lpvturismo.com/es/rio-esencial/",
+        "en": "https://lpvturismo.com/en/rio-essential/",
+        "x-default": "https://lpvturismo.com/passeios/rio-essencial/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 20,
+      "source": "pages/es/20-es.html",
+      "url": "/es/",
+      "family": "home",
+      "lang": "es",
+      "canonical": "https://lpvturismo.com/es/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/",
+        "es": "https://lpvturismo.com/es/",
+        "en": "https://lpvturismo.com/en/",
+        "x-default": "https://lpvturismo.com/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 237,
+      "source": "pages/es/paseos.html",
+      "url": "/es/paseos/",
+      "family": "tours",
+      "lang": "es",
+      "canonical": "https://lpvturismo.com/es/paseos/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/passeios/",
+        "es": "https://lpvturismo.com/es/paseos/",
+        "en": "https://lpvturismo.com/en/tours/",
+        "x-default": "https://lpvturismo.com/passeios/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 205,
+      "source": "pages/es/205-servicios.html",
+      "url": "/es/servicios/",
+      "family": "services",
+      "lang": "es",
+      "canonical": "https://lpvturismo.com/es/servicios/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/outros-servicos/",
+        "es": "https://lpvturismo.com/es/servicios/",
+        "en": "https://lpvturismo.com/en/services/",
+        "x-default": "https://lpvturismo.com/outros-servicos/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 203,
+      "source": "pages/es/203-quiero-armar-mi-itinerario.html",
+      "url": "/es/quiero-armar-mi-itinerario/",
+      "family": "itinerary_form",
+      "lang": "es",
+      "canonical": "https://lpvturismo.com/es/quiero-armar-mi-itinerario/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/quero-montar-meu-roteiro/",
+        "es": "https://lpvturismo.com/es/quiero-armar-mi-itinerario/",
+        "en": "https://lpvturismo.com/en/plan-my-itinerary/",
+        "x-default": "https://lpvturismo.com/quero-montar-meu-roteiro/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 160,
+      "source": "pages/es/160-mosaicos-del-rio.html",
+      "url": "/es/mosaicos-del-rio/",
+      "family": "mosaics",
+      "lang": "es",
+      "canonical": "https://lpvturismo.com/es/mosaicos-del-rio/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/passeios/mosaicos-do-rio/",
+        "es": "https://lpvturismo.com/es/mosaicos-del-rio/",
+        "en": "https://lpvturismo.com/en/mosaics-of-rio/",
+        "x-default": "https://lpvturismo.com/passeios/mosaicos-do-rio/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 194,
+      "source": "pages/es/194-inmersion-floresta-da-tijuca.html",
+      "url": "/es/inmersion-floresta-da-tijuca/",
+      "family": "tijuca_forest",
+      "lang": "es",
+      "canonical": "https://lpvturismo.com/es/inmersion-floresta-da-tijuca/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/passeios/imersao-floresta-da-tijuca/",
+        "es": "https://lpvturismo.com/es/inmersion-floresta-da-tijuca/",
+        "en": "https://lpvturismo.com/en/tijuca-forest-immersion/",
+        "x-default": "https://lpvturismo.com/passeios/imersao-floresta-da-tijuca/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 195,
+      "source": "pages/es/195-rio-esencial.html",
+      "url": "/es/rio-esencial/",
+      "family": "rio_essential",
+      "lang": "es",
+      "canonical": "https://lpvturismo.com/es/rio-esencial/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/passeios/rio-essencial/",
+        "es": "https://lpvturismo.com/es/rio-esencial/",
+        "en": "https://lpvturismo.com/en/rio-essential/",
+        "x-default": "https://lpvturismo.com/passeios/rio-essencial/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 21,
+      "source": "pages/en/21-en.html",
+      "url": "/en/",
+      "family": "home",
+      "lang": "en",
+      "canonical": "https://lpvturismo.com/en/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/",
+        "es": "https://lpvturismo.com/es/",
+        "en": "https://lpvturismo.com/en/",
+        "x-default": "https://lpvturismo.com/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 239,
+      "source": "pages/en/tours.html",
+      "url": "/en/tours/",
+      "family": "tours",
+      "lang": "en",
+      "canonical": "https://lpvturismo.com/en/tours/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/passeios/",
+        "es": "https://lpvturismo.com/es/paseos/",
+        "en": "https://lpvturismo.com/en/tours/",
+        "x-default": "https://lpvturismo.com/passeios/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 217,
+      "source": "pages/en/services.html",
+      "url": "/en/services/",
+      "family": "services",
+      "lang": "en",
+      "canonical": "https://lpvturismo.com/en/services/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/outros-servicos/",
+        "es": "https://lpvturismo.com/es/servicios/",
+        "en": "https://lpvturismo.com/en/services/",
+        "x-default": "https://lpvturismo.com/outros-servicos/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 218,
+      "source": "pages/en/plan-my-itinerary.html",
+      "url": "/en/plan-my-itinerary/",
+      "family": "itinerary_form",
+      "lang": "en",
+      "canonical": "https://lpvturismo.com/en/plan-my-itinerary/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/quero-montar-meu-roteiro/",
+        "es": "https://lpvturismo.com/es/quiero-armar-mi-itinerario/",
+        "en": "https://lpvturismo.com/en/plan-my-itinerary/",
+        "x-default": "https://lpvturismo.com/quero-montar-meu-roteiro/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 219,
+      "source": "pages/en/mosaics-of-rio.html",
+      "url": "/en/mosaics-of-rio/",
+      "family": "mosaics",
+      "lang": "en",
+      "canonical": "https://lpvturismo.com/en/mosaics-of-rio/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/passeios/mosaicos-do-rio/",
+        "es": "https://lpvturismo.com/es/mosaicos-del-rio/",
+        "en": "https://lpvturismo.com/en/mosaics-of-rio/",
+        "x-default": "https://lpvturismo.com/passeios/mosaicos-do-rio/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 220,
+      "source": "pages/en/tijuca-forest-immersion.html",
+      "url": "/en/tijuca-forest-immersion/",
+      "family": "tijuca_forest",
+      "lang": "en",
+      "canonical": "https://lpvturismo.com/en/tijuca-forest-immersion/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/passeios/imersao-floresta-da-tijuca/",
+        "es": "https://lpvturismo.com/es/inmersion-floresta-da-tijuca/",
+        "en": "https://lpvturismo.com/en/tijuca-forest-immersion/",
+        "x-default": "https://lpvturismo.com/passeios/imersao-floresta-da-tijuca/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    },
+    {
+      "id": 221,
+      "source": "pages/en/rio-essential.html",
+      "url": "/en/rio-essential/",
+      "family": "rio_essential",
+      "lang": "en",
+      "canonical": "https://lpvturismo.com/en/rio-essential/",
+      "alternates": {
+        "pt-BR": "https://lpvturismo.com/passeios/rio-essencial/",
+        "es": "https://lpvturismo.com/es/rio-esencial/",
+        "en": "https://lpvturismo.com/en/rio-essential/",
+        "x-default": "https://lpvturismo.com/passeios/rio-essencial/"
+      },
+      "missing_direct_equivalents": [],
+      "navigation_fallbacks_not_hreflang": {}
+    }
+  ],
+  "shared_legal_page": {
+    "url": "/politica-de-privacidade/",
+    "lang": "pt-BR",
+    "owner_approved": true,
+    "owner_reported_status": "publish",
+    "editable_source": "LPV_Turismo_Politica_de_Privacidade_Site_2026.md",
+    "editable_source_in_repository": false,
+    "outside_22_page_package": true
+  }
+}
