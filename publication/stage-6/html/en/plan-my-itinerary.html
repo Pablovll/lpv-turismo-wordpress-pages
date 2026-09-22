@@ -1,0 +1,324 @@
+<!-- Page: I want to plan my itinerary - English corrected version -->
+<header class="topbar">
+<div class="container nav">
+<a aria-label="LPV Turismo" class="brand" href="/en/"><span class="brand-mark"></span><span>LPV Turismo</span></a>
+<button aria-controls="lpv-primary-nav" aria-expanded="false" aria-label="Open menu" class="lpv-menu-toggle" data-close-label="Close menu" data-open-label="Open menu" title="Open menu" type="button"><span aria-hidden="true" class="lpv-menu-toggle-icon"><span></span><span></span><span></span></span></button>
+<nav aria-label="Main navigation" class="nav-links" id="lpv-primary-nav">
+<a href="/en/tours/">Tours</a>
+<a href="/en/services/">Services</a>
+<a href="/en/services/#lp-experiences" aria-label="L&amp;P Experiences, available on the Services page">L&amp;P Experiences</a>
+<a href="/en/#about">About</a>
+<a href="/en/#contact">Contact</a>
+<div aria-label="Available languages" class="language-switcher nav-language"><a href="/quero-montar-meu-roteiro/" title="Portuguese">PT</a><a href="/es/quiero-armar-mi-itinerario/" title="Spanish">ES</a><a aria-current="page" class="active" href="/en/plan-my-itinerary/" title="English">EN</a></div>
+<a class="button primary" href="https://wa.me/5521992998706?text=Hello%21%20I%27d%20like%20help%20requesting%20a%20personalized%20proposal." rel="noopener" target="_blank">WhatsApp</a>
+</nav>
+</div>
+</header>
+<script>
+(() => {
+  const toggle = document.querySelector('.lpv-menu-toggle');
+  const nav = document.getElementById('lpv-primary-nav');
+  if (toggle && nav) {
+    const setMenu = (open, returnFocus = false) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? toggle.dataset.closeLabel : toggle.dataset.openLabel);
+      toggle.title = open ? toggle.dataset.closeLabel : toggle.dataset.openLabel;
+      if (!open && returnFocus) toggle.focus();
+    };
+    toggle.closest('.topbar')?.classList.add('menu-ready');
+    toggle.addEventListener('click', () => setMenu(toggle.getAttribute('aria-expanded') !== 'true'));
+    nav.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') setMenu(false, true);
+    });
+    nav.addEventListener('click', (event) => {
+      if (event.target.closest('a') && matchMedia('(max-width: 980px)').matches) setMenu(false);
+    });
+    matchMedia('(min-width: 981px)').addEventListener('change', (event) => {
+      if (event.matches) setMenu(false);
+    });
+  }
+
+  const language = document.querySelector('.nav-language [aria-current="page"]')?.textContent.trim().toLowerCase() || 'unknown';
+  const tours = {
+    '/passeios/mosaicos-do-rio/': 'mosaicos-do-rio',
+    '/es/mosaicos-del-rio/': 'mosaicos-do-rio',
+    '/en/mosaics-of-rio/': 'mosaicos-do-rio',
+    '/passeios/imersao-floresta-da-tijuca/': 'floresta-da-tijuca',
+    '/es/inmersion-floresta-da-tijuca/': 'floresta-da-tijuca',
+    '/en/tijuca-forest-immersion/': 'floresta-da-tijuca',
+    '/passeios/rio-essencial/': 'rio-essencial',
+    '/es/rio-esencial/': 'rio-essencial',
+    '/en/rio-essential/': 'rio-essencial'
+  };
+  const track = (name, data) => {
+    if (typeof window.gtag === 'function') window.gtag('event', name, data);
+  };
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest('a');
+    if (!link) return;
+    const url = new URL(link.href, window.location.origin);
+    if (url.hostname === 'wa.me') {
+      track('lpv_whatsapp_click', { page_path: window.location.pathname, page_language: language });
+    } else if (url.origin === window.location.origin && tours[url.pathname]) {
+      track('lpv_tour_open', { tour_id: tours[url.pathname], page_path: window.location.pathname, page_language: language });
+    }
+  });
+  document.addEventListener('submit', (event) => {
+    const form = event.target.closest('form[action^="https://formsubmit.co/"]');
+    if (!form) return;
+    track('lpv_proposal_request_submit', {
+      request_context: form.querySelector('#lpv-form-context')?.value || 'roteiro-personalizado',
+      page_language: language
+    });
+  });
+})();
+</script>
+<div class="lpv-simple-page">
+<section class="lpv-page-hero" style="background: linear-gradient(90deg, rgba(23,63,53,.92), rgba(184,92,56,.70)), url('https://lpvturismo.com/wp-content/uploads/2026/06/IMG_20251004_102217134_HDR_AE-scaled-e1780408039352.jpg') center / cover no-repeat !important;">
+<div class="container">
+<div class="section-kicker" id="lpv-page-kicker" style="color:#F4E8D0;">Personalized itinerary</div>
+<h1 id="lpv-page-title">I want to plan my itinerary</h1>
+<p id="lpv-page-intro">Tell us a little about your trip, interests and desired tourist sights. From there, LPV Turismo prepares a personalized proposal for you.</p>
+</div>
+</section>
+<section class="lpv-content-section">
+<div class="container">
+<div class="lpv-form-card">
+<h2 id="lpv-form-title">Proposal request</h2>
+<p class="lpv-note" id="lpv-form-note">Complete the fields below to start a conversation and receive a proposal. Sending this request does not confirm a booking, availability or engagement.</p>
+<form action="https://formsubmit.co/info@lpvturismo.com" aria-describedby="lpv-form-note lpv-form-status" class="lpv-form-grid" id="lpv-itinerary-form" method="POST">
+<input id="lpv-form-subject" name="_subject" type="hidden" value="Personalized itinerary request - LPV Turismo"/>
+<input name="_captcha" type="hidden" value="false"/>
+<input name="_template" type="hidden" value="table"/>
+<input name="_next" type="hidden" value="https://lpvturismo.com/en/plan-my-itinerary/?sent=1"/>
+<input id="lpv-form-context" name="Request context" type="hidden" value="roteiro-personalizado"/>
+<div aria-live="polite" class="lpv-form-status" hidden="" id="lpv-form-status" role="status"></div>
+<div class="lpv-field full">
+<label for="request">Main interest</label>
+<input autocomplete="off" id="request" name="Main interest" type="text" value="Personalized itinerary"/>
+</div>
+<div class="lpv-field">
+<label for="name">Name</label>
+<input autocomplete="name" id="name" name="Name" placeholder="Your name" required="" type="text"/>
+</div>
+<div class="lpv-field">
+<label for="email">Email</label>
+<input autocomplete="email" id="email" inputmode="email" name="Email" placeholder="you@example.com" required="" type="email"/>
+</div>
+<div class="lpv-field">
+<label for="whatsapp">WhatsApp</label>
+<input autocomplete="tel" id="whatsapp" inputmode="tel" name="WhatsApp" placeholder="+55..." type="tel"/>
+</div>
+<div class="lpv-field">
+<label for="language">Preferred language</label>
+<select id="language" name="Preferred language">
+<option>Portuguese</option>
+<option>Spanish</option>
+<option selected="">English</option>
+</select>
+</div>
+<div class="lpv-field">
+<label for="date" id="lpv-date-label">Approximate date</label>
+<input autocomplete="off" id="date" name="Approximate date" placeholder="Ex: July 15, next week, still undefined" type="text"/>
+</div>
+<div class="lpv-field">
+<label for="people" id="lpv-people-label">Number of people</label>
+<input autocomplete="off" id="people" name="Number of people" placeholder="Ex: 2 adults, family with children, group of friends" type="text"/>
+</div>
+<div class="lpv-corporate-fields" id="lpv-corporate-fields" hidden="">
+<div class="lpv-field">
+<label for="destination">Destination or cities of interest</label>
+<input autocomplete="off" id="destination" name="Destination or cities of interest" placeholder="Ex: Cannes, the French Riviera and Paris" type="text"/>
+</div>
+<div class="lpv-field full">
+<label for="objective">Trip or mission objective</label>
+<textarea autocomplete="off" id="objective" name="Trip or mission objective" placeholder="Tell us about the event, industry, desired meetings and expected outcomes for the group."></textarea>
+</div>
+</div>
+<div class="lpv-field full">
+<label for="interests">Tourist sights, services or desired experiences</label>
+<textarea autocomplete="off" id="interests" name="Tourist sights and interests" placeholder="Ex: Christ the Redeemer, Sugarloaf Mountain, Tijuca Forest, Historic Center, gastronomy, football, transfer, reservations, private itinerary..."></textarea>
+</div>
+<div class="lpv-field full">
+<label for="notes">Important notes</label>
+<textarea autocomplete="off" id="notes" name="Notes" placeholder="Tell us about the group's pace, preferences, mobility, schedules, approximate budget or any important detail."></textarea>
+</div>
+<div class="full">
+<button class="button primary" type="submit">Send proposal request</button>
+<a class="button secondary" href="https://wa.me/5521992998706?text=Hello%21%20I%27d%20like%20help%20requesting%20a%20personalized%20proposal." rel="noopener" target="_blank">I prefer to talk on WhatsApp</a>
+</div>
+</form>
+</div>
+</div>
+</section>
+</div>
+<script>
+(() => {
+  const form = document.getElementById('lpv-itinerary-form');
+  if (!form) return;
+
+  const contexts = {
+    'roteiro-personalizado': {
+      label: 'Personalized itinerary',
+      subject: 'Personalized itinerary request - LPV Turismo',
+      whatsapp: "Hello! I'd like help requesting a personalized proposal."
+    },
+    'mosaicos-do-rio': {
+      label: 'Mosaics of Rio tour',
+      subject: 'Proposal request - Mosaics of Rio',
+      whatsapp: "Hello! I'd like information about the Mosaics of Rio tour."
+    },
+    'floresta-da-tijuca': {
+      label: 'Tijuca Forest Immersion tour',
+      subject: 'Proposal request - Tijuca Forest Immersion',
+      whatsapp: "Hello! I'd like information about the Tijuca Forest Immersion tour."
+    },
+    'rio-essencial': {
+      label: 'Rio Essential tour',
+      subject: 'Proposal request - Rio Essential',
+      whatsapp: "Hello! I'd like information about the Rio Essential tour."
+    },
+    'servicos': {
+      label: 'Services and local support',
+      subject: 'Proposal request - LPV Turismo services',
+      whatsapp: "Hello! I'd like information about LPV Turismo services."
+    },
+    'lp-experiences': {
+      label: 'L&P Experiences - group project',
+      subject: 'Proposal request - L&P Experiences',
+      whatsapp: "Hello! I'd like information about L&P Experiences.",
+      corporate: true,
+      kicker: 'L&P Experiences',
+      pageTitle: 'Tell us about your group project',
+      pageIntro: 'Share the purpose of the journey, group profile, destination and approximate dates. With this information, we can assess the project and prepare an initial proposal.',
+      formTitle: 'Group proposal request'
+    },
+    'mipim-2027': {
+      label: 'MIPIM Experience 2027',
+      subject: 'Information request - MIPIM Experience 2027',
+      whatsapp: "Hello! I'd like information about MIPIM Experience 2027.",
+      corporate: true,
+      kicker: 'MIPIM Experience 2027',
+      pageTitle: 'Request information about MIPIM',
+      pageIntro: 'Tell us about your group, professional goals, expected dates and interest in the mission. This step helps us assess the project and prepare an appropriate proposal.',
+      formTitle: 'MIPIM Experience 2027 information request'
+    }
+  };
+
+  const params = new URLSearchParams(window.location.search);
+  const requested = params.get('solicitacao');
+  const key = Object.prototype.hasOwnProperty.call(contexts, requested) ? requested : 'roteiro-personalizado';
+  const context = contexts[key];
+  const corporateFields = document.getElementById('lpv-corporate-fields');
+  const corporateControls = corporateFields.querySelectorAll('input, textarea, select');
+  const dateField = document.getElementById('date');
+  const peopleField = document.getElementById('people');
+  document.getElementById('request').value = context.label;
+  document.getElementById('lpv-form-context').value = key;
+  document.getElementById('lpv-form-subject').value = context.subject;
+  corporateFields.hidden = !context.corporate;
+  corporateControls.forEach((control) => {
+    control.disabled = !context.corporate;
+    control.required = Boolean(context.corporate);
+  });
+  dateField.required = Boolean(context.corporate);
+  peopleField.required = Boolean(context.corporate);
+
+  if (context.corporate) {
+    document.getElementById('lpv-page-kicker').textContent = context.kicker;
+    document.getElementById('lpv-page-title').textContent = context.pageTitle;
+    document.getElementById('lpv-page-intro').textContent = context.pageIntro;
+    document.getElementById('lpv-form-title').textContent = context.formTitle;
+    document.getElementById('lpv-date-label').textContent = 'Approximate dates';
+    document.getElementById('lpv-people-label').textContent = 'Group size and profile';
+  }
+
+  const nextField = form.querySelector('input[name="_next"]');
+  const nextUrl = new URL(nextField.value);
+  nextUrl.searchParams.set('solicitacao', key);
+  nextField.value = nextUrl.toString();
+
+  document.querySelectorAll('.language-switcher a').forEach((link) => {
+    const url = new URL(link.href, window.location.origin);
+    url.searchParams.set('solicitacao', key);
+    link.href = `${url.pathname}${url.search}`;
+  });
+
+  document.querySelectorAll('a[href*="wa.me/5521992998706"]').forEach((link) => {
+    const url = new URL(link.href);
+    url.searchParams.set('text', context.whatsapp);
+    link.href = url.toString();
+  });
+
+  const status = document.getElementById('lpv-form-status');
+  const submitButton = form.querySelector('button[type="submit"]');
+  const defaultButtonText = submitButton.textContent;
+  let submitting = false;
+  const showStatus = (message, state) => {
+    status.textContent = message;
+    status.className = `lpv-form-status is-${state}`;
+    status.hidden = false;
+  };
+  const resetSubmission = () => {
+    submitting = false;
+    form.removeAttribute('aria-busy');
+    submitButton.disabled = false;
+    submitButton.textContent = defaultButtonText;
+  };
+
+  if (params.get('sent') === '1') {
+    showStatus('Request received. Your booking is not yet confirmed; the LPV team will review the information submitted.', 'success');
+  } else if (params.get('error') === '1') {
+    showStatus('We could not confirm the submission. Review your details and try again, or use WhatsApp if you prefer.', 'error');
+  }
+
+  form.addEventListener('submit', (event) => {
+    if (submitting) {
+      event.preventDefault();
+      return;
+    }
+    submitting = true;
+    form.setAttribute('aria-busy', 'true');
+    submitButton.disabled = true;
+    submitButton.textContent = 'Sending...';
+    showStatus('Sending your request...', 'sending');
+  });
+  window.addEventListener('pageshow', resetSubmission);
+
+  form.addEventListener('invalid', (event) => {
+    if (event.target.id === 'name' && event.target.validity.valueMissing) {
+      event.target.setCustomValidity('Enter your name.');
+    }
+    if (event.target.id === 'email') {
+      event.target.setCustomValidity(event.target.validity.valueMissing ? 'Enter your email.' : 'Check the email format.');
+    }
+  }, true);
+  form.addEventListener('input', (event) => event.target.setCustomValidity(''));
+})();
+</script>
+<footer class="footer lpv-site-footer">
+<div class="container footer-grid lpv-footer-grid">
+<section class="lpv-footer-brand" aria-label="LPV Turismo">
+<a class="lpv-footer-brand-link" href="/en/" aria-label="LPV Turismo"><img class="skip-lazy" alt="LPV Turismo" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/6.png"></a>
+<p>Guided experiences to discover Rio beyond the obvious.</p>
+</section>
+<section class="lpv-footer-registry" aria-label="Registration details">
+<h2 class="lpv-footer-heading">REGISTRATION &amp; PARTNERS</h2>
+<div class="lpv-footer-info" aria-label="Registration details">
+<div><span>Cadastur number</span><strong>19.276396.57-2</strong></div>
+<div><span>CNPJ</span><strong>68.500.624/0001-01</strong></div>
+</div>
+<div class="lpv-footer-logos" aria-label="Certifications and verticals">
+<div class="lpv-cadastur" aria-label="Cadastur"><img class="skip-lazy" alt="Cadastur" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/cadasturlogo-e1782824855735.png"></div>
+<a class="lpv-footer-lp-experiences" href="/en/services/#lp-experiences" aria-label="L&P Experiences"><img class="skip-lazy" alt="L&amp;P Experiences" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/4-1.png"></a>
+</div>
+</section>
+<section class="lpv-footer-connect" aria-label="CONNECT">
+<h2 class="lpv-footer-heading">CONNECT</h2>
+<nav class="lpv-social-links" aria-label="Official channels"><a class="lpv-social-link lpv-social-link-instagram" href="https://www.instagram.com/lpvturismo/" target="_blank" rel="noopener noreferrer" title="Instagram LPV Turismo"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/—Pngtree—instagram-icon-instagram-logo-vector_3584852.png"><span class="lpv-visually-hidden">Instagram</span></a><a class="lpv-social-link lpv-social-link-google" href="https://share.google/o4c88LHxmB3aawfms" target="_blank" rel="noopener noreferrer" title="Google Business LPV Turismo"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/googlel-logo.png"><span class="lpv-visually-hidden">Google</span></a><a class="lpv-social-link lpv-social-link-getyourguide" href="https://www.getyourguide.com/lpv-turismo-s784036/" target="_blank" rel="noopener noreferrer" title="Products on GetYourGuide"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/MAIN-GetYourGuide-stacked-logo-white-on-guiding-red-container-RGB.png"><span class="lpv-visually-hidden">GetYourGuide</span></a></nav>
+<h2 class="lpv-footer-heading lpv-footer-language-label">LANGUAGE</h2>
+<div aria-label="Available languages" class="language-switcher footer-language"><a href="/quero-montar-meu-roteiro/" title="Portuguese">PT</a><a href="/es/quiero-armar-mi-itinerario/" title="Spanish">ES</a><a aria-current="page" class="active" href="/en/plan-my-itinerary/" title="English">EN</a></div>
+</section>
+</div>
+<div class="container lpv-footer-bottom"><span>© 2026. All rights reserved.</span><a class="lpv-footer-privacy" href="/politica-de-privacidade/" hreflang="pt-BR">Privacy Policy (Portuguese)</a></div>
+</footer>

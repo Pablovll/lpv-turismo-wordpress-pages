@@ -1,0 +1,208 @@
+
+<!-- Página: Mosaicos de Río — recorrido detallado -->
+<header class="topbar">
+<div class="container nav">
+<a aria-label="LPV Turismo" class="brand" href="/es/"><span class="brand-mark"></span><span>LPV Turismo</span></a>
+<button aria-controls="lpv-primary-nav" aria-expanded="false" aria-label="Abrir menú" class="lpv-menu-toggle" data-close-label="Cerrar menú" data-open-label="Abrir menú" title="Abrir menú" type="button"><span aria-hidden="true" class="lpv-menu-toggle-icon"><span></span><span></span><span></span></span></button>
+<nav aria-label="Navegación principal" class="nav-links" id="lpv-primary-nav">
+<a href="/es/paseos/" aria-current="location">Paseos</a>
+<a href="/es/servicios/">Servicios</a>
+<a href="/es/servicios/#lp-experiences" aria-label="L&amp;P Experiences, disponible en la página Servicios">L&amp;P Experiences</a>
+<a href="/es/#sobre">Sobre mí</a>
+<a href="/es/#contacto">Contacto</a>
+<div aria-label="Idiomas disponibles" class="language-switcher nav-language"><a href="/passeios/mosaicos-do-rio/" title="Português">PT</a><a aria-current="page" class="active" href="/es/mosaicos-del-rio/" title="Español">ES</a><a href="/en/mosaics-of-rio/" title="English">EN</a></div>
+<a class="button primary" href="https://wa.me/5521992998706?text=%C2%A1Hola%21%20Me%20gustar%C3%ADa%20recibir%20informaci%C3%B3n%20sobre%20el%20paseo%20Mosaicos%20del%20R%C3%ADo." rel="noopener" target="_blank">WhatsApp</a>
+</nav>
+</div>
+</header>
+<script>
+(() => {
+  const toggle = document.querySelector('.lpv-menu-toggle');
+  const nav = document.getElementById('lpv-primary-nav');
+  if (toggle && nav) {
+    const setMenu = (open, returnFocus = false) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? toggle.dataset.closeLabel : toggle.dataset.openLabel);
+      toggle.title = open ? toggle.dataset.closeLabel : toggle.dataset.openLabel;
+      if (!open && returnFocus) toggle.focus();
+    };
+    toggle.closest('.topbar')?.classList.add('menu-ready');
+    toggle.addEventListener('click', () => setMenu(toggle.getAttribute('aria-expanded') !== 'true'));
+    nav.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') setMenu(false, true);
+    });
+    nav.addEventListener('click', (event) => {
+      if (event.target.closest('a') && matchMedia('(max-width: 980px)').matches) setMenu(false);
+    });
+    matchMedia('(min-width: 981px)').addEventListener('change', (event) => {
+      if (event.matches) setMenu(false);
+    });
+  }
+
+  const language = document.querySelector('.nav-language [aria-current="page"]')?.textContent.trim().toLowerCase() || 'unknown';
+  const tours = {
+    '/passeios/mosaicos-do-rio/': 'mosaicos-do-rio',
+    '/es/mosaicos-del-rio/': 'mosaicos-do-rio',
+    '/en/mosaics-of-rio/': 'mosaicos-do-rio',
+    '/passeios/imersao-floresta-da-tijuca/': 'floresta-da-tijuca',
+    '/es/inmersion-floresta-da-tijuca/': 'floresta-da-tijuca',
+    '/en/tijuca-forest-immersion/': 'floresta-da-tijuca',
+    '/passeios/rio-essencial/': 'rio-essencial',
+    '/es/rio-esencial/': 'rio-essencial',
+    '/en/rio-essential/': 'rio-essencial'
+  };
+  const track = (name, data) => {
+    if (typeof window.gtag === 'function') window.gtag('event', name, data);
+  };
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest('a');
+    if (!link) return;
+    const url = new URL(link.href, window.location.origin);
+    if (url.hostname === 'wa.me') {
+      track('lpv_whatsapp_click', { page_path: window.location.pathname, page_language: language });
+    } else if (url.origin === window.location.origin && tours[url.pathname]) {
+      track('lpv_tour_open', { tour_id: tours[url.pathname], page_path: window.location.pathname, page_language: language });
+    }
+  });
+  document.addEventListener('submit', (event) => {
+    const form = event.target.closest('form[action^="https://formsubmit.co/"]');
+    if (!form) return;
+    track('lpv_proposal_request_submit', {
+      request_context: form.querySelector('#lpv-form-context')?.value || 'roteiro-personalizado',
+      page_language: language
+    });
+  });
+})();
+</script>
+<div class="lpv-simple-page">
+<section class="lpv-page-hero lpv-route-hero is-mosaicos">
+<div class="container">
+<div class="section-kicker" style="color:#F4E8D0;">Ciudad, arte y vida urbana</div>
+<h1>Mosaicos de Río</h1>
+<p>Una experiencia guiada para descubrir Río de Janeiro a través de sus fragmentos: barrios, paisajes, contrastes, arte, arquitectura, cultura cotidiana y formas de vivir la ciudad.</p>
+<div class="hero-actions">
+<a class="button primary" href="/es/quiero-armar-mi-itinerario/?solicitacao=mosaicos-do-rio">Solicitar propuesta</a>
+<a class="button secondary" href="https://wa.me/5521992998706?text=%C2%A1Hola%21%20Me%20gustar%C3%ADa%20recibir%20informaci%C3%B3n%20sobre%20el%20paseo%20Mosaicos%20del%20R%C3%ADo." rel="noopener" target="_blank">Hablar por WhatsApp</a>
+</div>
+</div>
+</section>
+<section class="lpv-content-section">
+<div class="container">
+<div class="section-header">
+<div class="section-kicker">Resumen de la experiencia</div>
+<h2>Un recorrido para leer Río más allá de las postales</h2>
+<p class="lead">Mosaicos de Río es una experiencia urbana pensada para quienes quieren observar la ciudad con más atención: sus capas históricas, sus ritmos, sus calles, sus vacíos, sus encuentros y sus contrastes. El recorrido puede adaptarse al perfil del grupo, al tiempo disponible y al tipo de interés de cada visitante.</p>
+</div>
+<dl class="lpv-quick-facts"><div><dt>Región</dt><dd>Áreas urbanas de Río de Janeiro</dd></div><div><dt>Formato</dt><dd>Experiencia privada o para grupos pequeños</dd></div><div><dt>Idiomas</dt><dd>Portugués, español e inglés</dd></div><div><dt>Ideal para</dt><dd>Cultura, fotografía, arquitectura, arte urbano y vida cotidiana</dd></div></dl>
+</div>
+</section>
+<section class="lpv-content-section lpv-atmosphere-section">
+<div class="container">
+<div class="section-header center">
+<div class="section-kicker">Atmósfera de la experiencia</div>
+<h2>Río en capas, detalles y escenas urbanas</h2>
+<p class="lead">Una selección visual para traducir el espíritu de Mosaicos de Río: calles, arte, paisaje urbano y detalles culturales que ayudan a contar la ciudad.</p>
+</div>
+<div class="lpv-visual-grid">
+<figure class="lpv-visual-main"><img loading="lazy" alt="Escena urbana del recorrido Mosaicos del Río" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/IMG_20251018_100412814_HDR_AE-scaled.jpg"/><figcaption>Calles, arte y vida urbana</figcaption></figure>
+<figure><img loading="lazy" alt="Paisaje urbano de Río de Janeiro" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/IMG-20260426-WA0028-1-scaled.jpg"/><figcaption>Paisaje urbano</figcaption></figure>
+<figure><img loading="lazy" alt="Detalle cultural en Río de Janeiro" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/IMG_20250622_120651130_HDR-scaled.jpg"/><figcaption>Detalles culturales</figcaption></figure>
+</div>
+</div>
+</section>
+<section class="lpv-content-section" style="background:var(--lpv-areia);">
+<div class="container">
+<div class="section-header center">
+<div class="section-kicker">Concepto</div>
+<h2>La ciudad como composición de fragmentos</h2>
+<p class="lead">Río no es una imagen única. Es un conjunto de escenas, barrios, sonidos, historias y formas de ocupar el espacio. Este recorrido parte de esa idea: mirar la ciudad como un mosaico, donde cada detalle ayuda a comprender una parte mayor del paisaje carioca.</p>
+</div>
+<div class="cards">
+<article class="card"><span class="number">01</span><h3>Paisaje urbano</h3><p>Observación de calles, plazas, fachadas, perspectivas, contrastes entre naturaleza y concreto y formas de circulación por la ciudad.</p></article>
+<article class="card"><span class="number">02</span><h3>Cultura cotidiana</h3><p>Conversaciones sobre hábitos, ritmos, encuentros, comercio local, ocupación del espacio público y formas de sociabilidad carioca.</p></article>
+<article class="card"><span class="number">03</span><h3>Arte y memoria</h3><p>Lectura de expresiones artísticas, arquitectura, símbolos urbanos y marcas históricas que aparecen en el camino.</p></article>
+</div>
+</div>
+</section>
+<section class="lpv-content-section">
+<div class="container">
+<div class="section-header">
+<div class="section-kicker">Posibles adaptaciones</div>
+<h2>Una experiencia diseñada para observar, conversar y conectar</h2>
+<p class="lead">El contenido del recorrido puede variar según el punto de partida, las condiciones del día y el perfil del grupo. La propuesta es construir siempre una experiencia viva, no un circuito rígido.</p>
+</div>
+<div class="cards">
+<article class="lpv-service-card"><h3>Barrios y caminos</h3><p>Lectura de los espacios urbanos, sus transiciones, sus atmósferas y las relaciones entre distintas zonas de la ciudad.</p></article>
+<article class="lpv-service-card"><h3>Arquitectura y ciudad</h3><p>Observación de estilos, fachadas, adaptaciones, marcas del tiempo y contrastes entre proyectos formales y vida real.</p></article>
+<article class="lpv-service-card"><h3>Fotografía y mirada</h3><p>Pausas para contemplar, fotografiar y percibir escenas que normalmente pasarían desapercibidas.</p></article>
+<article class="lpv-service-card"><h3>Historias y contexto</h3><p>Explicaciones accesibles sobre ciudad, cultura, paisaje, memoria y vida cotidiana, sin transformar el paseo en una clase pesada.</p></article>
+<article class="lpv-service-card"><h3>Ritmo local</h3><p>Tiempo para caminar, conversar, parar, observar, tomar un café o ajustar el recorrido según la energía del grupo.</p></article>
+<article class="lpv-service-card"><h3>Experiencia a medida</h3><p>Posibilidad de adaptar el recorrido a intereses como arte, gastronomía, fotografía, música, historia urbana o vida de barrio.</p></article>
+</div>
+</div>
+</section>
+<section class="process">
+<div class="container">
+<div class="section-header center">
+<div class="section-kicker">Formato y logística</div>
+<h2>Cómo funciona el recorrido</h2>
+<p class="lead">Mosaicos de Río está pensado para ser flexible. Antes de confirmar, alineamos expectativas, idioma, ritmo, intereses y necesidades específicas.</p>
+</div>
+<div class="cards">
+<article class="card"><span class="number">01</span><h3>Conversación inicial</h3><p>Vos contás quién viaja, cuándo viene, qué temas interesan y qué tipo de experiencia busca en Río.</p></article>
+<article class="card"><span class="number">02</span><h3>Curaduría del recorrido</h3><p>LPV Turismo sugiere el mejor formato, punto de encuentro y combinación de temas para el grupo.</p></article>
+<article class="card"><span class="number">03</span><h3>Experiencia guiada</h3><p>El día del paseo, el foco es guiar con contexto, cuidado, atención a la logística, buenas historias y libertad para ajustar el ritmo.</p></article>
+</div>
+</div>
+</section>
+<section class="lpv-content-section">
+<div class="container">
+<div class="cards">
+<article class="lpv-service-card"><h3>Incluye</h3><ul class="ticks"><li>Guiado privado o en grupo pequeño.</li><li>Curaduría del recorrido según el perfil del visitante.</li><li>Contexto cultural, urbano e histórico durante la experiencia.</li><li>Atención en portugués, español o inglés.</li></ul></article>
+<article class="lpv-service-card"><h3>No incluye</h3><ul class="ticks"><li>Transporte, cuando sea necesario. Consultá por opciones de transfer.</li><li>Alimentos, bebidas y consumos personales.</li><li>Entradas o tickets, si el recorrido incluye espacios pagos.</li><li>Servicios de terceros no combinados previamente.</li></ul></article>
+<article class="lpv-service-card"><h3>Recomendaciones</h3><ul class="ticks"><li>Usar calzado cómodo.</li><li>Llevar agua, protector solar y documento.</li><li>Traer celular o cámara para registros.</li><li>Informar restricciones de movilidad o preferencias antes del paseo.</li></ul></article>
+</div>
+</div>
+</section>
+<section class="lpv-content-section lpv-faq-section">
+<div class="container"><div class="section-header"><div class="section-kicker">Preguntas frecuentes</div><h2>Antes de solicitar Mosaicos de Río</h2></div>
+<div class="lpv-faq-list"><details><summary>¿El paseo es privado?</summary><p>Sí. La experiencia se ofrece en formato privado o para grupos pequeños.</p></details><details><summary>¿El recorrido es siempre igual?</summary><p>No. El recorrido se define según el perfil del grupo, el tiempo disponible, los intereses y las condiciones del día.</p></details><details><summary>¿En qué idiomas se puede realizar?</summary><p>La atención está disponible en portugués, español e inglés.</p></details></div></div>
+</section>
+<section class="cta">
+<div class="container">
+<div class="section-kicker" style="color:var(--lpv-areia);">Solicitá tu experiencia</div>
+<h2>¿Querés vivir Río como un mosaico de historias, paisajes y encuentros?</h2>
+<p>Enviá una breve descripción de tu grupo, fechas aproximadas e intereses principales. A partir de eso, armamos una propuesta adecuada a tu ritmo y a tu mirada.</p>
+<div class="hero-actions" style="justify-content:center;">
+<a class="button primary" href="/es/quiero-armar-mi-itinerario/?solicitacao=mosaicos-do-rio">Solicitar propuesta</a>
+<a class="button secondary" href="https://wa.me/5521992998706?text=%C2%A1Hola%21%20Me%20gustar%C3%ADa%20recibir%20informaci%C3%B3n%20sobre%20el%20paseo%20Mosaicos%20del%20R%C3%ADo." rel="noopener" style="color:white;border-color:rgba(255,255,255,.45);" target="_blank">Hablar por WhatsApp</a>
+</div>
+</div>
+</section>
+</div>
+<footer class="footer lpv-site-footer">
+<div class="container footer-grid lpv-footer-grid">
+<section class="lpv-footer-brand" aria-label="LPV Turismo">
+<a class="lpv-footer-brand-link" href="/es/" aria-label="LPV Turismo"><img class="skip-lazy" alt="LPV Turismo" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/6.png"></a>
+<p>Experiencias guiadas para descubrir Río más allá de lo obvio.</p>
+</section>
+<section class="lpv-footer-registry" aria-label="Datos de registro">
+<h2 class="lpv-footer-heading">REGISTRO Y ALIANZAS</h2>
+<div class="lpv-footer-info" aria-label="Datos de registro">
+<div><span>Número de Cadastur</span><strong>19.276396.57-2</strong></div>
+<div><span>CNPJ</span><strong>68.500.624/0001-01</strong></div>
+</div>
+<div class="lpv-footer-logos" aria-label="Certificaciones y verticales">
+<div class="lpv-cadastur" aria-label="Cadastur"><img class="skip-lazy" alt="Cadastur" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/cadasturlogo-e1782824855735.png"></div>
+<a class="lpv-footer-lp-experiences" href="/es/servicios/#lp-experiences" aria-label="L&P Experiences"><img class="skip-lazy" alt="L&amp;P Experiences" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/4-1.png"></a>
+</div>
+</section>
+<section class="lpv-footer-connect" aria-label="CONECTA">
+<h2 class="lpv-footer-heading">CONECTA</h2>
+<nav class="lpv-social-links" aria-label="Canales oficiales"><a class="lpv-social-link lpv-social-link-instagram" href="https://www.instagram.com/lpvturismo/" target="_blank" rel="noopener noreferrer" title="Instagram LPV Turismo"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/—Pngtree—instagram-icon-instagram-logo-vector_3584852.png"><span class="lpv-visually-hidden">Instagram</span></a><a class="lpv-social-link lpv-social-link-google" href="https://share.google/o4c88LHxmB3aawfms" target="_blank" rel="noopener noreferrer" title="Google Business LPV Turismo"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/googlel-logo.png"><span class="lpv-visually-hidden">Google</span></a><a class="lpv-social-link lpv-social-link-getyourguide" href="https://www.getyourguide.com/lpv-turismo-s784036/" target="_blank" rel="noopener noreferrer" title="Productos en GetYourGuide"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/MAIN-GetYourGuide-stacked-logo-white-on-guiding-red-container-RGB.png"><span class="lpv-visually-hidden">GetYourGuide</span></a></nav>
+<h2 class="lpv-footer-heading lpv-footer-language-label">IDIOMA</h2>
+<div aria-label="Idiomas disponibles" class="language-switcher footer-language"><a href="/passeios/mosaicos-do-rio/" title="Português">PT</a><a aria-current="page" class="active" href="/es/mosaicos-del-rio/" title="Español">ES</a><a href="/en/mosaics-of-rio/" title="English">EN</a></div>
+</section>
+</div>
+<div class="container lpv-footer-bottom"><span>© 2026. Todos los derechos reservados.</span><a class="lpv-footer-privacy" href="/politica-de-privacidade/" hreflang="pt-BR">Política de privacidad (portugués)</a></div>
+</footer>

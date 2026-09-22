@@ -4,6 +4,8 @@ Decisões do proprietário: 22/09/2026. Pacote local para revisão; não é publ
 
 Atualização da Etapa 5: a integração mínima de idiomas está versionada em `wordpress/plugins/lpv-language-seo/`. Consulte `docs/stage-5-language-seo.md` e o README do plugin para testes, instalação manual e rollback. Ela não foi instalada no WordPress.
 
+Atualização da Etapa 6: usar `docs/stage-6-wordpress-integration.md` como procedimento atual de staging. O plugin separado LPV Page Templates aplica o modelo versionado às 22 páginas e trata Front Page explicitamente. O procedimento manual de criação/atribuição de templates abaixo permanece como referência histórica, não deve ser executado junto com o plugin. Nenhuma aplicação no WordPress foi realizada.
+
 ## Escopo e decisões resolvidas
 
 - Sete páginas EN revisadas e autorizadas para publicação. `status: publish` no mapa representa o estado desejado, não uma alteração remota executada.

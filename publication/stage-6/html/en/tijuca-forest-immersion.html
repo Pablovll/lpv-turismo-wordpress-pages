@@ -1,0 +1,180 @@
+<!-- Page: Tijuca Forest Immersion - detailed tour -->
+<header class="topbar">
+<div class="container nav">
+<a aria-label="LPV Turismo" class="brand" href="/en/"><span class="brand-mark"></span><span>LPV Turismo</span></a>
+<button aria-controls="lpv-primary-nav" aria-expanded="false" aria-label="Open menu" class="lpv-menu-toggle" data-close-label="Close menu" data-open-label="Open menu" title="Open menu" type="button"><span aria-hidden="true" class="lpv-menu-toggle-icon"><span></span><span></span><span></span></span></button>
+<nav aria-label="Main navigation" class="nav-links" id="lpv-primary-nav">
+<a href="/en/tours/" aria-current="location">Tours</a>
+<a href="/en/services/">Services</a>
+<a href="/en/services/#lp-experiences" aria-label="L&amp;P Experiences, available on the Services page">L&amp;P Experiences</a>
+<a href="/en/#about">About</a>
+<a href="/en/#contact">Contact</a>
+<div aria-label="Available languages" class="language-switcher nav-language"><a href="/passeios/imersao-floresta-da-tijuca/" title="Portuguese">PT</a><a href="/es/inmersion-floresta-da-tijuca/" title="Spanish">ES</a><a aria-current="page" class="active" href="/en/tijuca-forest-immersion/" title="English">EN</a></div>
+<a class="button primary" href="https://wa.me/5521992998706?text=Hello%21%20I%27d%20like%20information%20about%20the%20Tijuca%20Forest%20Immersion%20tour." rel="noopener" target="_blank">WhatsApp</a>
+</nav>
+</div>
+</header>
+<script>
+(() => {
+  const toggle = document.querySelector('.lpv-menu-toggle');
+  const nav = document.getElementById('lpv-primary-nav');
+  if (toggle && nav) {
+    const setMenu = (open, returnFocus = false) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? toggle.dataset.closeLabel : toggle.dataset.openLabel);
+      toggle.title = open ? toggle.dataset.closeLabel : toggle.dataset.openLabel;
+      if (!open && returnFocus) toggle.focus();
+    };
+    toggle.closest('.topbar')?.classList.add('menu-ready');
+    toggle.addEventListener('click', () => setMenu(toggle.getAttribute('aria-expanded') !== 'true'));
+    nav.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') setMenu(false, true);
+    });
+    nav.addEventListener('click', (event) => {
+      if (event.target.closest('a') && matchMedia('(max-width: 980px)').matches) setMenu(false);
+    });
+    matchMedia('(min-width: 981px)').addEventListener('change', (event) => {
+      if (event.matches) setMenu(false);
+    });
+  }
+
+  const language = document.querySelector('.nav-language [aria-current="page"]')?.textContent.trim().toLowerCase() || 'unknown';
+  const tours = {
+    '/passeios/mosaicos-do-rio/': 'mosaicos-do-rio',
+    '/es/mosaicos-del-rio/': 'mosaicos-do-rio',
+    '/en/mosaics-of-rio/': 'mosaicos-do-rio',
+    '/passeios/imersao-floresta-da-tijuca/': 'floresta-da-tijuca',
+    '/es/inmersion-floresta-da-tijuca/': 'floresta-da-tijuca',
+    '/en/tijuca-forest-immersion/': 'floresta-da-tijuca',
+    '/passeios/rio-essencial/': 'rio-essencial',
+    '/es/rio-esencial/': 'rio-essencial',
+    '/en/rio-essential/': 'rio-essencial'
+  };
+  const track = (name, data) => {
+    if (typeof window.gtag === 'function') window.gtag('event', name, data);
+  };
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest('a');
+    if (!link) return;
+    const url = new URL(link.href, window.location.origin);
+    if (url.hostname === 'wa.me') {
+      track('lpv_whatsapp_click', { page_path: window.location.pathname, page_language: language });
+    } else if (url.origin === window.location.origin && tours[url.pathname]) {
+      track('lpv_tour_open', { tour_id: tours[url.pathname], page_path: window.location.pathname, page_language: language });
+    }
+  });
+  document.addEventListener('submit', (event) => {
+    const form = event.target.closest('form[action^="https://formsubmit.co/"]');
+    if (!form) return;
+    track('lpv_proposal_request_submit', {
+      request_context: form.querySelector('#lpv-form-context')?.value || 'roteiro-personalizado',
+      page_language: language
+    });
+  });
+})();
+</script>
+<div class="lpv-simple-page">
+<section class="lpv-page-hero lpv-route-hero is-floresta">
+<div class="container">
+<div class="section-kicker" style="color:#F4E8D0;">Nature, city and Atlantic Forest</div>
+<h1>Tijuca Forest Immersion</h1>
+<p>A guided experience to feel the nature that runs through Rio de Janeiro, among forest, viewpoints, environmental stories and landscapes that reveal another dimension of the city.</p>
+<div class="hero-actions"><a class="button primary" href="/en/plan-my-itinerary/?solicitacao=floresta-da-tijuca">Request a proposal</a><a class="button secondary" href="https://wa.me/5521992998706?text=Hello%21%20I%27d%20like%20information%20about%20the%20Tijuca%20Forest%20Immersion%20tour." rel="noopener" target="_blank">Talk on WhatsApp</a></div>
+</div>
+</section>
+<section class="lpv-content-section">
+<div class="container">
+<div class="section-header"><div class="section-kicker">Experience overview</div><h2>An encounter with the forest inside the city</h2><p class="lead">Tijuca Forest Immersion is an experience for travelers who want to live Rio de Janeiro beyond the beach and classic postcards. The route offers a sensitive approach to the Carioca Atlantic Forest, its paths, viewpoints, sounds, shade, stories and presence in the urban landscape.</p></div>
+<dl class="lpv-quick-facts"><div><dt>Area</dt><dd>Tijuca Forest, Rio de Janeiro</dd></div><div><dt>Format</dt><dd>Private or small-group tour</dd></div><div><dt>Languages</dt><dd>Portuguese, Spanish and English</dd></div><div><dt>Best for</dt><dd>Nature, photography, landscape, light ecotourism and environmental history</dd></div></dl>
+</div>
+</section>
+<section class="lpv-content-section lpv-atmosphere-section">
+<div class="container">
+<div class="section-header center"><div class="section-kicker">Experience atmosphere</div><h2>The forest in paths, viewpoints and silence</h2><p class="lead">A visual selection that translates the presence of the Atlantic Forest in Rio: vegetation, viewpoints and paths that reveal another dimension of the city.</p></div>
+<div class="lpv-visual-grid">
+<figure class="lpv-visual-main"><img loading="lazy" alt="Tijuca Forest and Atlantic Forest vegetation" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/IMG_20260517_094659964_HDR_AE-scaled.jpg"/><figcaption>Living forest</figcaption></figure>
+<figure><img loading="lazy" alt="Viewpoint in Rio de Janeiro" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/IMG_20250920_093610666_HDR_AE-scaled-e1780405744206.jpg"/><figcaption>Viewpoints and landscape</figcaption></figure>
+<figure><img loading="lazy" alt="Path and nature in Tijuca Forest" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/IMG_20251122_132250203_AE-scaled.jpg"/><figcaption>Nature paths</figcaption></figure>
+</div>
+</div>
+</section>
+<section class="lpv-content-section" style="background:var(--lpv-areia);">
+<div class="container">
+<div class="section-header center"><div class="section-kicker">Concept</div><h2>The forest as an essential part of Rio</h2><p class="lead">The proposal of this route is to perceive that Rio is not just a city with nature around it. Nature is part of the city's own structure: it orients landscapes, marks neighborhoods, creates viewpoints, influences the climate, inspires ways of living and reveals a complex environmental history.</p></div>
+<div class="cards">
+<article class="card"><span class="number">01</span><h3>Living nature</h3><p>Observation of the forest, its sounds, textures, shadows, paths and forms of presence in Carioca everyday life.</p></article>
+<article class="card"><span class="number">02</span><h3>Landscape and viewpoints</h3><p>Reading of the city from elevated points of view, connecting relief, neighborhoods, sea, mountains and forest.</p></article>
+<article class="card"><span class="number">03</span><h3>Environmental history</h3><p>Conversations about landscape transformation, reforestation, uses of the territory and the relationship between city and nature.</p></article>
+</div>
+</div>
+</section>
+<section class="lpv-content-section">
+<div class="container">
+<div class="section-header">
+<div class="section-kicker">Route adapted to the group</div>
+<h2>An experience of contemplation, movement and landscape interpretation</h2>
+<p class="lead">The route may vary according to weather, conditions of the day, logistics and group profile. The idea is to build a pleasant experience connected to the participants' rhythm.</p>
+</div>
+<div class="cards">
+<article class="lpv-service-card"><h3>Forest paths</h3><p>Contact with trails, internal roads or circulation areas amid vegetation, always according to the agreed format.</p></article>
+<article class="lpv-service-card"><h3>Viewpoints and city reading</h3><p>Pauses to observe Rio's geography and understand how mountains, sea, neighborhoods and forest relate.</p></article>
+<article class="lpv-service-card"><h3>Photography and contemplation</h3><p>Time to record landscapes, forest details and moments of silence or observation.</p></article>
+<article class="lpv-service-card"><h3>Stories of the territory</h3><p>Context about occupation, landscape transformation and the importance of Tijuca Forest to Carioca identity.</p></article>
+<article class="lpv-service-card"><h3>Adaptable rhythm</h3><p>The experience can be more contemplative, photographic, cultural or active, according to the group's interest.</p></article>
+<article class="lpv-service-card"><h3>Connection with real Rio</h3><p>A way to understand the city not only through the urban, but also through the permanent presence of nature in its everyday life.</p></article>
+</div>
+</div>
+</section>
+<section class="process">
+<div class="container">
+<div class="section-header center"><div class="section-kicker">Format and logistics</div><h2>How the tour works</h2><p class="lead">Before confirming, we align group profile, available time, desired effort level, language and transfer logistics.</p></div>
+<div class="cards">
+<article class="card"><span class="number">01</span><h3>Initial conversation</h3><p>You share date, number of people, language, interests and any mobility or physical restrictions.</p></article>
+<article class="card"><span class="number">02</span><h3>Experience design</h3><p>LPV Turismo suggests the best route format, meeting point and rhythm for the group.</p></article>
+<article class="card"><span class="number">03</span><h3>Guiding on the day</h3><p>During the experience, the focus is context, care, contemplation, logistical attention and adaptation to the group's actual pace.</p></article>
+</div>
+</div>
+</section>
+<section class="lpv-content-section">
+<div class="container">
+<div class="cards">
+<article class="lpv-service-card"><h3>Includes</h3><ul class="ticks"><li>Private guiding or small-group guiding.</li><li>Route curation according to visitors' profile and rhythm.</li><li>Context about nature, landscape and environmental history.</li><li>Service in Portuguese, Spanish or English.</li></ul></article>
+<article class="lpv-service-card"><h3>Does not include</h3><ul class="ticks"><li>Transportation, when necessary. Ask about transfer options.</li><li>Food, drinks and personal expenses.</li><li>Tickets or entrance fees, if the route includes paid spaces.</li><li>Third-party services not previously arranged.</li></ul></article>
+<article class="lpv-service-card"><h3>Recommendations</h3><ul class="ticks"><li>Wear comfortable shoes suitable for walking.</li><li>Bring water, sunscreen, repellent and ID.</li><li>Wear light clothing and consider an extra layer according to the weather.</li><li>Inform any physical restriction or special need before the tour.</li></ul></article>
+</div>
+</div>
+</section>
+<section class="lpv-content-section lpv-faq-section">
+<div class="container"><div class="section-header"><div class="section-kicker">Frequently asked questions</div><h2>Before requesting the Tijuca Forest Immersion</h2></div>
+<div class="lpv-faq-list"><details><summary>How is the effort level defined?</summary><p>Before confirmation, LPV asks about physical condition, mobility restrictions and the desired effort level to suggest the most suitable format.</p></details><details><summary>Is transportation included?</summary><p>Not by default. When needed, LPV can provide guidance on transfer options arranged separately.</p></details><details><summary>Which languages are available?</summary><p>The experience is available in Portuguese, Spanish and English.</p></details></div></div>
+</section>
+<section class="cta">
+<div class="container"><div class="section-kicker" style="color:var(--lpv-areia);">Request your experience</div><h2>Would you like to experience Rio's nature with context and care?</h2><p>Send a short description of your group, approximate dates and main interests. From there, we prepare a proposal suited to your rhythm and desired experience.</p><div class="hero-actions" style="justify-content:center;"><a class="button primary" href="/en/plan-my-itinerary/?solicitacao=floresta-da-tijuca">Request a proposal</a><a class="button secondary" href="https://wa.me/5521992998706?text=Hello%21%20I%27d%20like%20information%20about%20the%20Tijuca%20Forest%20Immersion%20tour." rel="noopener" style="color:white;border-color:rgba(255,255,255,.45);" target="_blank">Talk on WhatsApp</a></div></div>
+</section>
+</div>
+<footer class="footer lpv-site-footer">
+<div class="container footer-grid lpv-footer-grid">
+<section class="lpv-footer-brand" aria-label="LPV Turismo">
+<a class="lpv-footer-brand-link" href="/en/" aria-label="LPV Turismo"><img class="skip-lazy" alt="LPV Turismo" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/6.png"></a>
+<p>Guided experiences to discover Rio beyond the obvious.</p>
+</section>
+<section class="lpv-footer-registry" aria-label="Registration details">
+<h2 class="lpv-footer-heading">REGISTRATION &amp; PARTNERS</h2>
+<div class="lpv-footer-info" aria-label="Registration details">
+<div><span>Cadastur number</span><strong>19.276396.57-2</strong></div>
+<div><span>CNPJ</span><strong>68.500.624/0001-01</strong></div>
+</div>
+<div class="lpv-footer-logos" aria-label="Certifications and verticals">
+<div class="lpv-cadastur" aria-label="Cadastur"><img class="skip-lazy" alt="Cadastur" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/cadasturlogo-e1782824855735.png"></div>
+<a class="lpv-footer-lp-experiences" href="/en/services/#lp-experiences" aria-label="L&P Experiences"><img class="skip-lazy" alt="L&amp;P Experiences" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/4-1.png"></a>
+</div>
+</section>
+<section class="lpv-footer-connect" aria-label="CONNECT">
+<h2 class="lpv-footer-heading">CONNECT</h2>
+<nav class="lpv-social-links" aria-label="Official channels"><a class="lpv-social-link lpv-social-link-instagram" href="https://www.instagram.com/lpvturismo/" target="_blank" rel="noopener noreferrer" title="Instagram LPV Turismo"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/—Pngtree—instagram-icon-instagram-logo-vector_3584852.png"><span class="lpv-visually-hidden">Instagram</span></a><a class="lpv-social-link lpv-social-link-google" href="https://share.google/o4c88LHxmB3aawfms" target="_blank" rel="noopener noreferrer" title="Google Business LPV Turismo"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/googlel-logo.png"><span class="lpv-visually-hidden">Google</span></a><a class="lpv-social-link lpv-social-link-getyourguide" href="https://www.getyourguide.com/lpv-turismo-s784036/" target="_blank" rel="noopener noreferrer" title="Products on GetYourGuide"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/MAIN-GetYourGuide-stacked-logo-white-on-guiding-red-container-RGB.png"><span class="lpv-visually-hidden">GetYourGuide</span></a></nav>
+<h2 class="lpv-footer-heading lpv-footer-language-label">LANGUAGE</h2>
+<div aria-label="Available languages" class="language-switcher footer-language"><a href="/passeios/imersao-floresta-da-tijuca/" title="Portuguese">PT</a><a href="/es/inmersion-floresta-da-tijuca/" title="Spanish">ES</a><a aria-current="page" class="active" href="/en/tijuca-forest-immersion/" title="English">EN</a></div>
+</section>
+</div>
+<div class="container lpv-footer-bottom"><span>© 2026. All rights reserved.</span><a class="lpv-footer-privacy" href="/politica-de-privacidade/" hreflang="pt-BR">Privacy Policy (Portuguese)</a></div>
+</footer>

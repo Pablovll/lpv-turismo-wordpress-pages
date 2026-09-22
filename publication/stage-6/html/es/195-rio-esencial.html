@@ -1,0 +1,202 @@
+
+<!-- Página: Río Esencial — recorrido detallado -->
+<header class="topbar">
+<div class="container nav">
+<a aria-label="LPV Turismo" class="brand" href="/es/"><span class="brand-mark"></span><span>LPV Turismo</span></a>
+<button aria-controls="lpv-primary-nav" aria-expanded="false" aria-label="Abrir menú" class="lpv-menu-toggle" data-close-label="Cerrar menú" data-open-label="Abrir menú" title="Abrir menú" type="button"><span aria-hidden="true" class="lpv-menu-toggle-icon"><span></span><span></span><span></span></span></button>
+<nav aria-label="Navegación principal" class="nav-links" id="lpv-primary-nav">
+<a href="/es/paseos/" aria-current="location">Paseos</a>
+<a href="/es/servicios/">Servicios</a>
+<a href="/es/servicios/#lp-experiences" aria-label="L&amp;P Experiences, disponible en la página Servicios">L&amp;P Experiences</a>
+<a href="/es/#sobre">Sobre mí</a>
+<a href="/es/#contacto">Contacto</a>
+<div aria-label="Idiomas disponibles" class="language-switcher nav-language"><a href="/passeios/rio-essencial/" title="Português">PT</a><a aria-current="page" class="active" href="/es/rio-esencial/" title="Español">ES</a><a href="/en/rio-essential/" title="English">EN</a></div>
+<a class="button primary" href="https://wa.me/5521992998706?text=%C2%A1Hola%21%20Me%20gustar%C3%ADa%20recibir%20informaci%C3%B3n%20sobre%20el%20paseo%20R%C3%ADo%20Esencial." rel="noopener" target="_blank">WhatsApp</a>
+</nav>
+</div>
+</header>
+<script>
+(() => {
+  const toggle = document.querySelector('.lpv-menu-toggle');
+  const nav = document.getElementById('lpv-primary-nav');
+  if (toggle && nav) {
+    const setMenu = (open, returnFocus = false) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? toggle.dataset.closeLabel : toggle.dataset.openLabel);
+      toggle.title = open ? toggle.dataset.closeLabel : toggle.dataset.openLabel;
+      if (!open && returnFocus) toggle.focus();
+    };
+    toggle.closest('.topbar')?.classList.add('menu-ready');
+    toggle.addEventListener('click', () => setMenu(toggle.getAttribute('aria-expanded') !== 'true'));
+    nav.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') setMenu(false, true);
+    });
+    nav.addEventListener('click', (event) => {
+      if (event.target.closest('a') && matchMedia('(max-width: 980px)').matches) setMenu(false);
+    });
+    matchMedia('(min-width: 981px)').addEventListener('change', (event) => {
+      if (event.matches) setMenu(false);
+    });
+  }
+
+  const language = document.querySelector('.nav-language [aria-current="page"]')?.textContent.trim().toLowerCase() || 'unknown';
+  const tours = {
+    '/passeios/mosaicos-do-rio/': 'mosaicos-do-rio',
+    '/es/mosaicos-del-rio/': 'mosaicos-do-rio',
+    '/en/mosaics-of-rio/': 'mosaicos-do-rio',
+    '/passeios/imersao-floresta-da-tijuca/': 'floresta-da-tijuca',
+    '/es/inmersion-floresta-da-tijuca/': 'floresta-da-tijuca',
+    '/en/tijuca-forest-immersion/': 'floresta-da-tijuca',
+    '/passeios/rio-essencial/': 'rio-essencial',
+    '/es/rio-esencial/': 'rio-essencial',
+    '/en/rio-essential/': 'rio-essencial'
+  };
+  const track = (name, data) => {
+    if (typeof window.gtag === 'function') window.gtag('event', name, data);
+  };
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest('a');
+    if (!link) return;
+    const url = new URL(link.href, window.location.origin);
+    if (url.hostname === 'wa.me') {
+      track('lpv_whatsapp_click', { page_path: window.location.pathname, page_language: language });
+    } else if (url.origin === window.location.origin && tours[url.pathname]) {
+      track('lpv_tour_open', { tour_id: tours[url.pathname], page_path: window.location.pathname, page_language: language });
+    }
+  });
+  document.addEventListener('submit', (event) => {
+    const form = event.target.closest('form[action^="https://formsubmit.co/"]');
+    if (!form) return;
+    track('lpv_proposal_request_submit', {
+      request_context: form.querySelector('#lpv-form-context')?.value || 'roteiro-personalizado',
+      page_language: language
+    });
+  });
+})();
+</script>
+<div class="lpv-simple-page">
+<section class="lpv-page-hero lpv-route-hero is-rio">
+<div class="container">
+<div class="section-kicker" style="color:#F4E8D0;">Clásicos con contexto</div>
+<h1>Río Esencial</h1>
+<p>Una experiencia guiada para conocer los grandes símbolos de Río de Janeiro con más contexto, cuidado y sensibilidad local.</p>
+<div class="hero-actions"><a class="button primary" href="/es/quiero-armar-mi-itinerario/?solicitacao=rio-essencial">Solicitar propuesta</a><a class="button secondary" href="https://wa.me/5521992998706?text=%C2%A1Hola%21%20Me%20gustar%C3%ADa%20recibir%20informaci%C3%B3n%20sobre%20el%20paseo%20R%C3%ADo%20Esencial." rel="noopener" target="_blank">Hablar por WhatsApp</a></div>
+</div>
+</section>
+<section class="lpv-content-section">
+<div class="container">
+<div class="section-header">
+<div class="section-kicker">Resumen de la experiencia</div>
+<h2>El Río clásico, pero sin recorrido automático</h2>
+<p class="lead">Río Esencial está pensado para quienes visitan la ciudad por primera vez o para quienes quieren volver a sus lugares más emblemáticos con una lectura más profunda. La propuesta es conectar paisaje, historia, cultura, vida urbana y experiencia personal, evitando la sensación de paseo apurado e impersonal.</p>
+</div>
+<dl class="lpv-quick-facts"><div><dt>Región</dt><dd>Río de Janeiro</dd></div><div><dt>Formato</dt><dd>Recorrido privado o para grupos pequeños</dd></div><div><dt>Idiomas</dt><dd>Portugués, español e inglés</dd></div><div><dt>Ideal para</dt><dd>Primera visita, íconos cariocas, historia, paisaje y vida urbana</dd></div></dl>
+</div>
+</section>
+<section class="lpv-content-section lpv-atmosphere-section">
+<div class="container">
+<div class="section-header center">
+<div class="section-kicker">Atmósfera de la experiencia</div>
+<h2>El Río esencial en paisaje, ciudad y horizonte</h2>
+<p class="lead">Una selección visual para traducir el espíritu de Río Esencial: íconos, calles, playa, montaña y la fuerza del paisaje carioca.</p>
+</div>
+<div class="lpv-visual-grid">
+<figure class="lpv-visual-main"><img loading="lazy" alt="Paisaje icónico de Río de Janeiro" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/IMG_20250627_082904606_HDR-scaled-e1780592537759.jpg"/><figcaption>Paisaje icónico</figcaption></figure>
+<figure><img loading="lazy" alt="Escena urbana de Río de Janeiro" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/IMG_20260528_090415205_HDR_AE-scaled.jpg"/><figcaption>Ciudad y movimiento</figcaption></figure>
+<figure><img loading="lazy" alt="Playa montaña y ciudad en Río de Janeiro" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/IMG_20260521_152502255_HDR_AE-scaled.jpg"/><figcaption>Playa, montaña y ciudad</figcaption></figure>
+</div>
+</div>
+</section>
+<section class="lpv-content-section" style="background:var(--lpv-areia);">
+<div class="container">
+<div class="section-header center">
+<div class="section-kicker">Concepto</div>
+<h2>Los íconos de Río ganan sentido cuando están bien contados</h2>
+<p class="lead">Cristo Redentor, Pan de Azúcar, playas, centro histórico y paisajes famosos no son solo escenarios. Revelan decisiones urbanas, símbolos culturales, modos de vida y formas de imaginar Río. Este recorrido busca transformar lugares conocidos en una experiencia con narrativa y presencia.</p>
+</div>
+<div class="cards">
+<article class="card"><span class="number">01</span><h3>Paisaje simbólico</h3><p>Lectura de las grandes postales como expresiones de la identidad carioca y de la relación entre ciudad, mar y montaña.</p></article>
+<article class="card"><span class="number">02</span><h3>Historia y ciudad</h3><p>Contexto accesible sobre formación urbana, transformaciones del paisaje y usos culturales de los espacios visitados.</p></article>
+<article class="card"><span class="number">03</span><h3>Experiencia cuidada</h3><p>Organización del recorrido con atención al ritmo del grupo, horarios, traslados, pausas y preferencias personales.</p></article>
+</div>
+</div>
+</section>
+<section class="lpv-content-section">
+<div class="container">
+<div class="section-header">
+<div class="section-kicker">Posibilidades del recorrido</div>
+<h2>Una combinación flexible de los lugares esenciales de la ciudad</h2>
+<p class="lead">El recorrido puede diseñarse según el tiempo disponible, las condiciones del día, la logística de acceso y los intereses del grupo. La propuesta no es prometer un paquete rígido, sino construir una experiencia coherente y bien aprovechada.</p>
+</div>
+<div class="cards">
+<article class="lpv-service-card"><h3>Grandes miradores</h3><p>Posibilidad de incluir miradores destacados para comprender la geografía y la fuerza visual de Río.</p></article>
+<article class="lpv-service-card"><h3>Símbolos cariocas</h3><p>Lectura de los íconos de la ciudad con contexto cultural, histórico y urbano, evitando una visita solo fotográfica.</p></article>
+<article class="lpv-service-card"><h3>Playas y barrios</h3><p>Observación de la relación entre paisaje, vida cotidiana, turismo, vida local e identidad carioca.</p></article>
+<article class="lpv-service-card"><h3>Centro y memoria</h3><p>Cuando tenga sentido para el recorrido, inclusión de áreas históricas para entender capas más antiguas de la ciudad.</p></article>
+<article class="lpv-service-card"><h3>Fotografía y contemplación</h3><p>Pausas pensadas para registrar el paisaje sin perder la calidad de la experiencia guiada.</p></article>
+<article class="lpv-service-card"><h3>Recorrido a medida</h3><p>Posibilidad de adaptar la experiencia para familias, parejas, grupos de amigos, viajeros hispanohablantes o visitantes con poco tiempo.</p></article>
+</div>
+</div>
+</section>
+<section class="process">
+<div class="container">
+<div class="section-header center">
+<div class="section-kicker">Formato y logística</div>
+<h2>Cómo funciona el recorrido</h2>
+<p class="lead">Antes de confirmar, alineamos tiempo disponible, idioma, intereses, logística de transporte y posibles entradas o tickets, si el recorrido elegido incluye espacios pagos.</p>
+</div>
+<div class="cards">
+<article class="card"><span class="number">01</span><h3>Definición del perfil</h3><p>Entendemos si es primera visita, si hay intereses especiales, ritmo deseado, idioma y composición del grupo.</p></article>
+<article class="card"><span class="number">02</span><h3>Diseño del recorrido</h3><p>LPV Turismo sugiere una combinación viable e interesante, considerando traslados y aprovechamiento real del tiempo.</p></article>
+<article class="card"><span class="number">03</span><h3>Experiencia guiada</h3><p>El día del paseo, el foco es conducir con cuidado, contexto, presencia y flexibilidad para adaptar el ritmo cuando sea necesario.</p></article>
+</div>
+</div>
+</section>
+<section class="lpv-content-section">
+<div class="container">
+<div class="cards">
+<article class="lpv-service-card"><h3>Incluye</h3><ul class="ticks"><li>Guiado privado o en grupo pequeño.</li><li>Curaduría del recorrido según el tiempo disponible.</li><li>Contexto cultural, histórico y urbano durante la experiencia.</li><li>Atención en portugués, español o inglés.</li></ul></article>
+<article class="lpv-service-card"><h3>No incluye</h3><ul class="ticks"><li>Transporte, cuando sea necesario. Consultá por opciones de transfer.</li><li>Alimentos, bebidas y consumos personales.</li><li>Entradas, tickets o accesos a atracciones pagas.</li><li>Servicios de terceros no combinados previamente.</li></ul></article>
+<article class="lpv-service-card"><h3>Recomendaciones</h3><ul class="ticks"><li>Usar calzado cómodo.</li><li>Llevar agua, protector solar y documento.</li><li>Informar preferencias, limitaciones de movilidad y tiempo disponible.</li><li>Considerar horarios y logística para aprovechar mejor la experiencia.</li></ul></article>
+</div>
+</div>
+</section>
+<section class="lpv-content-section lpv-faq-section">
+<div class="container"><div class="section-header"><div class="section-kicker">Preguntas frecuentes</div><h2>Antes de solicitar Río Esencial</h2></div>
+<div class="lpv-faq-list"><details><summary>¿Qué atracciones forman parte del recorrido?</summary><p>La combinación se define antes de confirmar, según el tiempo disponible, los intereses, los accesos y la logística. Las posibilidades de esta página no son paradas garantizadas.</p></details><details><summary>¿El transporte y las entradas están incluidos?</summary><p>No de manera predeterminada. El transporte, las entradas y los accesos pagos se coordinan según el recorrido elegido.</p></details><details><summary>¿En qué idiomas se puede realizar?</summary><p>La atención está disponible en portugués, español e inglés.</p></details></div></div>
+</section>
+<section class="cta">
+<div class="container">
+<div class="section-kicker" style="color:var(--lpv-areia);">Solicitá tu experiencia</div>
+<h2>¿Querés conocer el Río esencial con más contexto y menos apuro?</h2>
+<p>Enviá una breve descripción de tu grupo, fechas aproximadas e intereses principales. A partir de eso, armamos una propuesta adecuada a tu tiempo y a tu estilo de viaje.</p>
+<div class="hero-actions" style="justify-content:center;"><a class="button primary" href="/es/quiero-armar-mi-itinerario/?solicitacao=rio-essencial">Solicitar propuesta</a><a class="button secondary" href="https://wa.me/5521992998706?text=%C2%A1Hola%21%20Me%20gustar%C3%ADa%20recibir%20informaci%C3%B3n%20sobre%20el%20paseo%20R%C3%ADo%20Esencial." rel="noopener" style="color:white;border-color:rgba(255,255,255,.45);" target="_blank">Hablar por WhatsApp</a></div>
+</div>
+</section>
+</div>
+<footer class="footer lpv-site-footer">
+<div class="container footer-grid lpv-footer-grid">
+<section class="lpv-footer-brand" aria-label="LPV Turismo">
+<a class="lpv-footer-brand-link" href="/es/" aria-label="LPV Turismo"><img class="skip-lazy" alt="LPV Turismo" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/6.png"></a>
+<p>Experiencias guiadas para descubrir Río más allá de lo obvio.</p>
+</section>
+<section class="lpv-footer-registry" aria-label="Datos de registro">
+<h2 class="lpv-footer-heading">REGISTRO Y ALIANZAS</h2>
+<div class="lpv-footer-info" aria-label="Datos de registro">
+<div><span>Número de Cadastur</span><strong>19.276396.57-2</strong></div>
+<div><span>CNPJ</span><strong>68.500.624/0001-01</strong></div>
+</div>
+<div class="lpv-footer-logos" aria-label="Certificaciones y verticales">
+<div class="lpv-cadastur" aria-label="Cadastur"><img class="skip-lazy" alt="Cadastur" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/cadasturlogo-e1782824855735.png"></div>
+<a class="lpv-footer-lp-experiences" href="/es/servicios/#lp-experiences" aria-label="L&P Experiences"><img class="skip-lazy" alt="L&amp;P Experiences" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/4-1.png"></a>
+</div>
+</section>
+<section class="lpv-footer-connect" aria-label="CONECTA">
+<h2 class="lpv-footer-heading">CONECTA</h2>
+<nav class="lpv-social-links" aria-label="Canales oficiales"><a class="lpv-social-link lpv-social-link-instagram" href="https://www.instagram.com/lpvturismo/" target="_blank" rel="noopener noreferrer" title="Instagram LPV Turismo"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/—Pngtree—instagram-icon-instagram-logo-vector_3584852.png"><span class="lpv-visually-hidden">Instagram</span></a><a class="lpv-social-link lpv-social-link-google" href="https://share.google/o4c88LHxmB3aawfms" target="_blank" rel="noopener noreferrer" title="Google Business LPV Turismo"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/googlel-logo.png"><span class="lpv-visually-hidden">Google</span></a><a class="lpv-social-link lpv-social-link-getyourguide" href="https://www.getyourguide.com/lpv-turismo-s784036/" target="_blank" rel="noopener noreferrer" title="Productos en GetYourGuide"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/MAIN-GetYourGuide-stacked-logo-white-on-guiding-red-container-RGB.png"><span class="lpv-visually-hidden">GetYourGuide</span></a></nav>
+<h2 class="lpv-footer-heading lpv-footer-language-label">IDIOMA</h2>
+<div aria-label="Idiomas disponibles" class="language-switcher footer-language"><a href="/passeios/rio-essencial/" title="Português">PT</a><a aria-current="page" class="active" href="/es/rio-esencial/" title="Español">ES</a><a href="/en/rio-essential/" title="English">EN</a></div>
+</section>
+</div>
+<div class="container lpv-footer-bottom"><span>© 2026. Todos los derechos reservados.</span><a class="lpv-footer-privacy" href="/politica-de-privacidade/" hreflang="pt-BR">Política de privacidad (portugués)</a></div>
+</footer>

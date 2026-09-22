@@ -1,0 +1,186 @@
+{
+  "version": "1.0.0",
+  "date": "2026-09-22",
+  "automatic_deployment": false,
+  "target": "Protected staging clone; same IDs and root-relative paths",
+  "template": "lpv-page-templates//lpv-content-only",
+  "front_page": {
+    "show_on_front": "page",
+    "page_on_front": 7
+  },
+  "order": [
+    "backup",
+    "template",
+    "language_plugin",
+    "css",
+    "html",
+    "aioseo",
+    "en_publication_status",
+    "cache_purge",
+    "public_html_audit"
+  ],
+  "pages": [
+    {
+      "id": 7,
+      "source": "pages/pt/7-lpv-turismo-rio-alem-do-obvio.html",
+      "url": "/",
+      "lang": "pt-BR",
+      "status": "publish"
+    },
+    {
+      "id": 17,
+      "source": "pages/pt/17-passeios.html",
+      "url": "/passeios/",
+      "lang": "pt-BR",
+      "status": "publish"
+    },
+    {
+      "id": 18,
+      "source": "pages/pt/18-outros-servicos.html",
+      "url": "/outros-servicos/",
+      "lang": "pt-BR",
+      "status": "publish"
+    },
+    {
+      "id": 255,
+      "source": "pages/pt/lp-experiences.html",
+      "url": "/lp-experiences/",
+      "lang": "pt-BR",
+      "status": "publish"
+    },
+    {
+      "id": 19,
+      "source": "pages/pt/19-quero-montar-meu-roteiro.html",
+      "url": "/quero-montar-meu-roteiro/",
+      "lang": "pt-BR",
+      "status": "publish"
+    },
+    {
+      "id": 84,
+      "source": "pages/pt/84-mosaicos-do-rio.html",
+      "url": "/passeios/mosaicos-do-rio/",
+      "lang": "pt-BR",
+      "status": "publish"
+    },
+    {
+      "id": 85,
+      "source": "pages/pt/85-imersao-floresta-da-tijuca.html",
+      "url": "/passeios/imersao-floresta-da-tijuca/",
+      "lang": "pt-BR",
+      "status": "publish"
+    },
+    {
+      "id": 86,
+      "source": "pages/pt/86-rio-essencial.html",
+      "url": "/passeios/rio-essencial/",
+      "lang": "pt-BR",
+      "status": "publish"
+    },
+    {
+      "id": 20,
+      "source": "pages/es/20-es.html",
+      "url": "/es/",
+      "lang": "es",
+      "status": "publish"
+    },
+    {
+      "id": 237,
+      "source": "pages/es/paseos.html",
+      "url": "/es/paseos/",
+      "lang": "es",
+      "status": "publish"
+    },
+    {
+      "id": 205,
+      "source": "pages/es/205-servicios.html",
+      "url": "/es/servicios/",
+      "lang": "es",
+      "status": "publish"
+    },
+    {
+      "id": 203,
+      "source": "pages/es/203-quiero-armar-mi-itinerario.html",
+      "url": "/es/quiero-armar-mi-itinerario/",
+      "lang": "es",
+      "status": "publish"
+    },
+    {
+      "id": 160,
+      "source": "pages/es/160-mosaicos-del-rio.html",
+      "url": "/es/mosaicos-del-rio/",
+      "lang": "es",
+      "status": "publish"
+    },
+    {
+      "id": 194,
+      "source": "pages/es/194-inmersion-floresta-da-tijuca.html",
+      "url": "/es/inmersion-floresta-da-tijuca/",
+      "lang": "es",
+      "status": "publish"
+    },
+    {
+      "id": 195,
+      "source": "pages/es/195-rio-esencial.html",
+      "url": "/es/rio-esencial/",
+      "lang": "es",
+      "status": "publish"
+    },
+    {
+      "id": 21,
+      "source": "pages/en/21-en.html",
+      "url": "/en/",
+      "lang": "en",
+      "status": "publish"
+    },
+    {
+      "id": 239,
+      "source": "pages/en/tours.html",
+      "url": "/en/tours/",
+      "lang": "en",
+      "status": "publish"
+    },
+    {
+      "id": 217,
+      "source": "pages/en/services.html",
+      "url": "/en/services/",
+      "lang": "en",
+      "status": "publish"
+    },
+    {
+      "id": 218,
+      "source": "pages/en/plan-my-itinerary.html",
+      "url": "/en/plan-my-itinerary/",
+      "lang": "en",
+      "status": "publish"
+    },
+    {
+      "id": 219,
+      "source": "pages/en/mosaics-of-rio.html",
+      "url": "/en/mosaics-of-rio/",
+      "lang": "en",
+      "status": "publish"
+    },
+    {
+      "id": 220,
+      "source": "pages/en/tijuca-forest-immersion.html",
+      "url": "/en/tijuca-forest-immersion/",
+      "lang": "en",
+      "status": "publish"
+    },
+    {
+      "id": 221,
+      "source": "pages/en/rio-essential.html",
+      "url": "/en/rio-essential/",
+      "lang": "en",
+      "status": "publish"
+    }
+  ],
+  "excluded": [
+    "privacy",
+    "posts",
+    "archives",
+    "search",
+    "404"
+  ],
+  "hreflang": "Runtime plugin only; do not paste static alternate tags"
+}

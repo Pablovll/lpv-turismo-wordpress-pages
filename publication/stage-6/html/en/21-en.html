@@ -1,0 +1,177 @@
+<!-- Page: LPV Turismo - English -->
+<header class="topbar">
+<div class="container nav">
+<a aria-label="LPV Turismo" class="brand" href="/en/"><span class="brand-mark"></span><span>LPV Turismo</span></a>
+<button aria-controls="lpv-primary-nav" aria-expanded="false" aria-label="Open menu" class="lpv-menu-toggle" data-close-label="Close menu" data-open-label="Open menu" title="Open menu" type="button"><span aria-hidden="true" class="lpv-menu-toggle-icon"><span></span><span></span><span></span></span></button>
+<nav aria-label="Main navigation" class="nav-links" id="lpv-primary-nav">
+<a href="/en/tours/">Tours</a>
+<a href="/en/services/">Services</a>
+<a href="/en/services/#lp-experiences" aria-label="L&amp;P Experiences, available on the Services page">L&amp;P Experiences</a>
+<a href="/en/#about">About</a>
+<a href="/en/#contact">Contact</a>
+<div aria-label="Available languages" class="language-switcher nav-language"><a href="/" title="Portuguese">PT</a><a href="/es/" title="Spanish">ES</a><a aria-current="page" class="active" href="/en/" title="English">EN</a></div>
+<a class="button primary" href="https://wa.me/5521992998706?text=Hello%21%20I%27d%20like%20to%20talk%20about%20an%20experience%20with%20LPV%20Turismo." rel="noopener" target="_blank">WhatsApp</a>
+</nav>
+</div>
+</header>
+<script>
+(() => {
+  const toggle = document.querySelector('.lpv-menu-toggle');
+  const nav = document.getElementById('lpv-primary-nav');
+  if (toggle && nav) {
+    const setMenu = (open, returnFocus = false) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? toggle.dataset.closeLabel : toggle.dataset.openLabel);
+      toggle.title = open ? toggle.dataset.closeLabel : toggle.dataset.openLabel;
+      if (!open && returnFocus) toggle.focus();
+    };
+    toggle.closest('.topbar')?.classList.add('menu-ready');
+    toggle.addEventListener('click', () => setMenu(toggle.getAttribute('aria-expanded') !== 'true'));
+    nav.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') setMenu(false, true);
+    });
+    nav.addEventListener('click', (event) => {
+      if (event.target.closest('a') && matchMedia('(max-width: 980px)').matches) setMenu(false);
+    });
+    matchMedia('(min-width: 981px)').addEventListener('change', (event) => {
+      if (event.matches) setMenu(false);
+    });
+  }
+
+  const language = document.querySelector('.nav-language [aria-current="page"]')?.textContent.trim().toLowerCase() || 'unknown';
+  const tours = {
+    '/passeios/mosaicos-do-rio/': 'mosaicos-do-rio',
+    '/es/mosaicos-del-rio/': 'mosaicos-do-rio',
+    '/en/mosaics-of-rio/': 'mosaicos-do-rio',
+    '/passeios/imersao-floresta-da-tijuca/': 'floresta-da-tijuca',
+    '/es/inmersion-floresta-da-tijuca/': 'floresta-da-tijuca',
+    '/en/tijuca-forest-immersion/': 'floresta-da-tijuca',
+    '/passeios/rio-essencial/': 'rio-essencial',
+    '/es/rio-esencial/': 'rio-essencial',
+    '/en/rio-essential/': 'rio-essencial'
+  };
+  const track = (name, data) => {
+    if (typeof window.gtag === 'function') window.gtag('event', name, data);
+  };
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest('a');
+    if (!link) return;
+    const url = new URL(link.href, window.location.origin);
+    if (url.hostname === 'wa.me') {
+      track('lpv_whatsapp_click', { page_path: window.location.pathname, page_language: language });
+    } else if (url.origin === window.location.origin && tours[url.pathname]) {
+      track('lpv_tour_open', { tour_id: tours[url.pathname], page_path: window.location.pathname, page_language: language });
+    }
+  });
+  document.addEventListener('submit', (event) => {
+    const form = event.target.closest('form[action^="https://formsubmit.co/"]');
+    if (!form) return;
+    track('lpv_proposal_request_submit', {
+      request_context: form.querySelector('#lpv-form-context')?.value || 'roteiro-personalizado',
+      page_language: language
+    });
+  });
+})();
+</script>
+<div>
+<section class="hero">
+<div class="container hero-grid">
+<div>
+<span class="eyebrow">Cultural and nature tours in Rio de Janeiro</span>
+<h1>Discover Rio beyond the obvious</h1>
+<p>Guided experiences for travelers who want to understand the city for real: its neighborhoods, landscapes, contrasts, stories, rhythms and ways of life.</p>
+<div class="hero-actions">
+<a class="button primary" href="/en/tours/">View tours</a>
+<a class="button secondary" href="/en/plan-my-itinerary/?solicitacao=roteiro-personalizado">Plan a custom itinerary</a>
+</div>
+</div>
+<aside class="hero-card">
+<strong>Rio told by someone who knows its many layers</strong>
+<span>Local curation, cultural context and attentive guidance in Portuguese, Spanish and English.</span>
+</aside>
+</div>
+</section>
+<section class="experiences" id="experiences">
+<div class="container">
+<div class="section-header">
+<div class="section-kicker">Featured tours</div>
+<h2>Choose how you want to experience Rio</h2>
+<p class="lead">Compare the options and open the details of the experience that best fits your group.</p>
+</div>
+<div class="lpv-tour-grid">
+<article class="lpv-tour-card is-mosaicos"><a aria-label="View details for Mosaics of Rio" class="lpv-tour-card-media" href="/en/mosaics-of-rio/"></a><div class="lpv-tour-card-body"><span class="tag">City &amp; culture</span><h3>Mosaics of Rio</h3><p>An urban walk through art, architecture, contrasts and everyday life, reading the city layer by layer.</p><ul class="lpv-tour-facts"><li>Private or small group</li><li>PT · ES · EN</li></ul><div class="lpv-card-actions"><a class="button primary" href="/en/mosaics-of-rio/">View details</a><a class="button secondary" href="/en/plan-my-itinerary/?solicitacao=mosaicos-do-rio">Request this tour</a></div></div></article>
+<article class="lpv-tour-card is-floresta"><a aria-label="View details for the Tijuca Forest immersion" class="lpv-tour-card-media" href="/en/tijuca-forest-immersion/"></a><div class="lpv-tour-card-body"><span class="tag">Nature &amp; immersion</span><h3>Tijuca Forest</h3><p>Atlantic Forest, viewpoints and environmental history in an experience adapted to the group's pace.</p><ul class="lpv-tour-facts"><li>Private or small group</li><li>PT · ES · EN</li></ul><div class="lpv-card-actions"><a class="button primary" href="/en/tijuca-forest-immersion/">View details</a><a class="button secondary" href="/en/plan-my-itinerary/?solicitacao=floresta-da-tijuca">Request this tour</a></div></div></article>
+<article class="lpv-tour-card is-rio"><a aria-label="View details for Rio Essential" class="lpv-tour-card-media" href="/en/rio-essential/"></a><div class="lpv-tour-card-body"><span class="tag">Classics with context</span><h3>Rio Essential</h3><p>Rio's defining landmarks connected through history, landscape and a local reading of the city.</p><ul class="lpv-tour-facts"><li>Private or small group</li><li>PT · ES · EN</li></ul><div class="lpv-card-actions"><a class="button primary" href="/en/rio-essential/">View details</a><a class="button secondary" href="/en/plan-my-itinerary/?solicitacao=rio-essencial">Request this tour</a></div></div></article>
+<article class="lpv-tour-card is-private"><a aria-label="Plan a custom itinerary" class="lpv-tour-card-media" href="/en/plan-my-itinerary/?solicitacao=roteiro-personalizado"></a><div class="lpv-tour-card-body"><span class="tag">Tailor-made</span><h3>Custom itinerary</h3><p>A proposal shaped around your group's interests, pace and practical needs.</p><ul class="lpv-tour-facts"><li>Personalized curation</li><li>Families and small groups</li></ul><div class="lpv-card-actions"><a class="button primary" href="/en/plan-my-itinerary/?solicitacao=roteiro-personalizado">Plan my itinerary</a></div></div></article>
+</div>
+</div>
+</section>
+<section class="lpv-about-section" id="about">
+<div class="container about">
+<div class="portrait-placeholder"><div class="portrait-caption"><strong>Luis Pablo Vallasciani</strong><span>Tour guide and creator of LPV Turismo.</span></div></div>
+<div>
+<div class="section-kicker">Luis Pablo &amp; LPV Turismo</div>
+<h2>An Argentine guide sharing Rio from the inside</h2>
+<p class="lead">Luis Pablo Vallasciani leads each experience with a personal approach, cultural sensitivity and a close reading of place, creating bridges between visitors and the city that lives beyond the postcards.</p>
+<p class="lpv-manifesto-copy">LPV was created to reveal a more vivid, less automatic Rio: not simply passing by attractions, but building a relationship with the city.</p>
+<div class="lpv-differentials" aria-label="What sets LPV Turismo apart"><div><strong>Local curation</strong><span>Culture, nature, architecture, neighborhoods and everyday life connected through a clear narrative.</span></div><div><strong>A human pace</strong><span>Time to observe, talk, photograph and adapt the experience to the group.</span></div><div><strong>Personal communication</strong><span>Service in Portuguese, Spanish and English for private experiences and small groups.</span></div></div>
+</div>
+</div>
+</section>
+<section class="process">
+<div class="container">
+<div class="section-header center"><div class="section-kicker">How it works</div><h2>From inquiry to confirmation</h2><p class="lead">A clear process for turning your interest into a proposal suited to the group.</p></div>
+<div class="cards">
+<article class="card"><span class="number">01</span><h3>Inquiry</h3><p>You share the date, group composition, language, interests and travel needs.</p></article>
+<article class="card"><span class="number">02</span><h3>Proposal</h3><p>LPV recommends the most suitable tour or creates a custom itinerary with scope and logistics aligned.</p></article>
+<article class="card"><span class="number">03</span><h3>Confirmation</h3><p>After reviewing the proposal and its terms, you confirm the experience. The initial request is not a booking.</p></article>
+</div>
+</div>
+</section>
+<section class="lpv-home-services">
+<div class="container">
+<div class="section-header"><div class="section-kicker">More ways to travel</div><h2>Services that complete the experience</h2><p class="lead">Support for organizing Rio your way and a dedicated offer for professional travel.</p></div>
+<div class="lpv-home-service-grid">
+<a class="lpv-home-service-link" href="/en/services/"><span class="section-kicker">Complementary services</span><h3>Transfers, football, local support and tailor-made experiences</h3><p>Explore options that can complement a tour or support specific group needs.</p><span class="lpv-text-link">View services</span></a>
+<a aria-label="Ask about L&amp;P Experiences" class="lpv-home-service-link lpv-home-service-professional" href="/en/plan-my-itinerary/?solicitacao=lp-experiences"><span class="section-kicker">L&amp;P Experiences</span><h3>Business trips, professional missions and curated group experiences</h3><p>International journeys combining business, culture, lifestyle and personal support.</p><span class="lpv-text-link">Ask about L&amp;P Experiences</span></a>
+</div>
+</div>
+</section>
+<section class="cta" id="contact">
+<div class="container">
+<div class="section-kicker" style="color:var(--lpv-areia);">Contact</div>
+<h2>Shall we plan your experience in Rio?</h2>
+<p>Tell us when you are coming, how many people are traveling and what kind of Rio you want to discover. From there, we prepare the best proposal for your group.</p>
+<div class="hero-actions" style="justify-content:center;">
+<a class="button primary" href="https://wa.me/5521992998706?text=Hello%21%20I%27d%20like%20to%20talk%20about%20an%20experience%20with%20LPV%20Turismo." rel="noopener" target="_blank">Write on WhatsApp</a>
+<a class="button secondary" href="/en/plan-my-itinerary/?solicitacao=roteiro-personalizado" style="color:white;border-color:rgba(255,255,255,.45);">Request a proposal</a>
+</div>
+</div>
+</section>
+</div>
+<footer class="footer lpv-site-footer">
+<div class="container footer-grid lpv-footer-grid">
+<section class="lpv-footer-brand" aria-label="LPV Turismo">
+<a class="lpv-footer-brand-link" href="/en/" aria-label="LPV Turismo"><img class="skip-lazy" alt="LPV Turismo" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/6.png"></a>
+<p>Guided experiences to discover Rio beyond the obvious.</p>
+</section>
+<section class="lpv-footer-registry" aria-label="Registration details">
+<h2 class="lpv-footer-heading">REGISTRATION &amp; PARTNERS</h2>
+<div class="lpv-footer-info" aria-label="Registration details">
+<div><span>Cadastur number</span><strong>19.276396.57-2</strong></div>
+<div><span>CNPJ</span><strong>68.500.624/0001-01</strong></div>
+</div>
+<div class="lpv-footer-logos" aria-label="Certifications and verticals">
+<div class="lpv-cadastur" aria-label="Cadastur"><img class="skip-lazy" alt="Cadastur" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/cadasturlogo-e1782824855735.png"></div>
+<a class="lpv-footer-lp-experiences" href="/en/services/#lp-experiences" aria-label="L&P Experiences"><img class="skip-lazy" alt="L&amp;P Experiences" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/4-1.png"></a>
+</div>
+</section>
+<section class="lpv-footer-connect" aria-label="CONNECT">
+<h2 class="lpv-footer-heading">CONNECT</h2>
+<nav class="lpv-social-links" aria-label="Official channels"><a class="lpv-social-link lpv-social-link-instagram" href="https://www.instagram.com/lpvturismo/" target="_blank" rel="noopener noreferrer" title="Instagram LPV Turismo"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/—Pngtree—instagram-icon-instagram-logo-vector_3584852.png"><span class="lpv-visually-hidden">Instagram</span></a><a class="lpv-social-link lpv-social-link-google" href="https://share.google/o4c88LHxmB3aawfms" target="_blank" rel="noopener noreferrer" title="Google Business LPV Turismo"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/googlel-logo.png"><span class="lpv-visually-hidden">Google</span></a><a class="lpv-social-link lpv-social-link-getyourguide" href="https://www.getyourguide.com/lpv-turismo-s784036/" target="_blank" rel="noopener noreferrer" title="Products on GetYourGuide"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/MAIN-GetYourGuide-stacked-logo-white-on-guiding-red-container-RGB.png"><span class="lpv-visually-hidden">GetYourGuide</span></a></nav>
+<h2 class="lpv-footer-heading lpv-footer-language-label">LANGUAGE</h2>
+<div aria-label="Available languages" class="language-switcher footer-language"><a href="/" title="Portuguese">PT</a><a href="/es/" title="Spanish">ES</a><a aria-current="page" class="active" href="/en/" title="English">EN</a></div>
+</section>
+</div>
+<div class="container lpv-footer-bottom"><span>© 2026. All rights reserved.</span><a class="lpv-footer-privacy" href="/politica-de-privacidade/" hreflang="pt-BR">Privacy Policy (Portuguese)</a></div>
+</footer>

@@ -1,0 +1,120 @@
+
+<!-- Página: Passeios -->
+<header class="topbar">
+<div class="container nav">
+<a aria-label="LPV Turismo" class="brand" href="/"><span class="brand-mark"></span><span>LPV Turismo</span></a>
+<button aria-controls="lpv-primary-nav" aria-expanded="false" aria-label="Abrir menu" class="lpv-menu-toggle" data-close-label="Fechar menu" data-open-label="Abrir menu" title="Abrir menu" type="button"><span aria-hidden="true" class="lpv-menu-toggle-icon"><span></span><span></span><span></span></span></button>
+<nav aria-label="Navegação principal" class="nav-links" id="lpv-primary-nav">
+<a href="/passeios/" aria-current="page">Passeios</a>
+<a href="/outros-servicos/">Serviços</a>
+<a href="/lp-experiences/">L&amp;P Experiences</a>
+<a href="/#sobre">Sobre</a>
+<a href="/#contato">Contato</a>
+<div aria-label="Idiomas disponíveis" class="language-switcher nav-language"><a aria-current="page" class="active" href="/passeios/" title="Português">PT</a><a href="/es/paseos/" title="Español">ES</a><a href="/en/tours/" title="English">EN</a></div>
+<a class="button primary" href="https://wa.me/5521992998706?text=Ol%C3%A1%21%20Gostaria%20de%20conhecer%20os%20passeios%20da%20LPV%20Turismo." rel="noopener" target="_blank">WhatsApp</a>
+</nav>
+</div>
+</header>
+<script>
+(() => {
+  const toggle = document.querySelector('.lpv-menu-toggle');
+  const nav = document.getElementById('lpv-primary-nav');
+  if (toggle && nav) {
+    const setMenu = (open, returnFocus = false) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? toggle.dataset.closeLabel : toggle.dataset.openLabel);
+      toggle.title = open ? toggle.dataset.closeLabel : toggle.dataset.openLabel;
+      if (!open && returnFocus) toggle.focus();
+    };
+    toggle.closest('.topbar')?.classList.add('menu-ready');
+    toggle.addEventListener('click', () => setMenu(toggle.getAttribute('aria-expanded') !== 'true'));
+    nav.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') setMenu(false, true);
+    });
+    nav.addEventListener('click', (event) => {
+      if (event.target.closest('a') && matchMedia('(max-width: 980px)').matches) setMenu(false);
+    });
+    matchMedia('(min-width: 981px)').addEventListener('change', (event) => {
+      if (event.matches) setMenu(false);
+    });
+  }
+
+  const language = document.querySelector('.nav-language [aria-current="page"]')?.textContent.trim().toLowerCase() || 'unknown';
+  const tours = {
+    '/passeios/mosaicos-do-rio/': 'mosaicos-do-rio',
+    '/es/mosaicos-del-rio/': 'mosaicos-do-rio',
+    '/en/mosaics-of-rio/': 'mosaicos-do-rio',
+    '/passeios/imersao-floresta-da-tijuca/': 'floresta-da-tijuca',
+    '/es/inmersion-floresta-da-tijuca/': 'floresta-da-tijuca',
+    '/en/tijuca-forest-immersion/': 'floresta-da-tijuca',
+    '/passeios/rio-essencial/': 'rio-essencial',
+    '/es/rio-esencial/': 'rio-essencial',
+    '/en/rio-essential/': 'rio-essencial'
+  };
+  const track = (name, data) => {
+    if (typeof window.gtag === 'function') window.gtag('event', name, data);
+  };
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest('a');
+    if (!link) return;
+    const url = new URL(link.href, window.location.origin);
+    if (url.hostname === 'wa.me') {
+      track('lpv_whatsapp_click', { page_path: window.location.pathname, page_language: language });
+    } else if (url.origin === window.location.origin && tours[url.pathname]) {
+      track('lpv_tour_open', { tour_id: tours[url.pathname], page_path: window.location.pathname, page_language: language });
+    }
+  });
+  document.addEventListener('submit', (event) => {
+    const form = event.target.closest('form[action^="https://formsubmit.co/"]');
+    if (!form) return;
+    track('lpv_proposal_request_submit', {
+      request_context: form.querySelector('#lpv-form-context')?.value || 'roteiro-personalizado',
+      page_language: language
+    });
+  });
+})();
+</script>
+<div class="lpv-simple-page">
+<section class="lpv-page-hero">
+<div class="container">
+<div class="section-kicker" style="color:#F4E8D0;">Experiências guiadas</div>
+<h1>Passeios no Rio além do óbvio</h1>
+<p>Escolha uma experiência guiada no Rio de Janeiro com curadoria local, contexto cultural, logística clara e atenção ao ritmo do seu grupo. Cada roteiro pode ser adaptado para viajantes individuais, casais, famílias, pequenos grupos e visitantes em português, espanhol ou inglês.</p>
+</div>
+</section>
+<section class="lpv-content-section">
+<div class="container">
+<div class="lpv-tour-grid lpv-tour-catalog">
+<article class="lpv-tour-card is-mosaicos"><a aria-label="Ver detalhes de Mosaicos do Rio" class="lpv-tour-card-media" href="/passeios/mosaicos-do-rio/"></a><div class="lpv-tour-card-body"><span class="tag">Cidade &amp; cultura</span><h3>Mosaicos do Rio</h3><p>Caminhada urbana com arte, arquitetura, contrastes e vida cotidiana para ler a cidade em camadas.</p><ul class="lpv-tour-facts"><li>Privado ou pequeno grupo</li><li>PT · ES · EN</li></ul><div class="lpv-card-actions"><a class="button primary" href="/passeios/mosaicos-do-rio/">Ver detalhes</a><a class="button secondary" href="/quero-montar-meu-roteiro/?solicitacao=mosaicos-do-rio">Solicitar passeio</a></div></div></article>
+<article class="lpv-tour-card is-floresta"><a aria-label="Ver detalhes da Imersão na Floresta da Tijuca" class="lpv-tour-card-media" href="/passeios/imersao-floresta-da-tijuca/"></a><div class="lpv-tour-card-body"><span class="tag">Natureza &amp; imersão</span><h3>Floresta da Tijuca</h3><p>Mata Atlântica, mirantes e história ambiental em uma experiência adaptada ao ritmo do grupo.</p><ul class="lpv-tour-facts"><li>Privado ou pequeno grupo</li><li>PT · ES · EN</li></ul><div class="lpv-card-actions"><a class="button primary" href="/passeios/imersao-floresta-da-tijuca/">Ver detalhes</a><a class="button secondary" href="/quero-montar-meu-roteiro/?solicitacao=floresta-da-tijuca">Solicitar passeio</a></div></div></article>
+<article class="lpv-tour-card is-rio"><a aria-label="Ver detalhes de Rio Essencial" class="lpv-tour-card-media" href="/passeios/rio-essencial/"></a><div class="lpv-tour-card-body"><span class="tag">Clássicos com contexto</span><h3>Rio Essencial</h3><p>Os grandes símbolos cariocas conectados por história, paisagem e uma leitura local da cidade.</p><ul class="lpv-tour-facts"><li>Privado ou pequeno grupo</li><li>PT · ES · EN</li></ul><div class="lpv-card-actions"><a class="button primary" href="/passeios/rio-essencial/">Ver detalhes</a><a class="button secondary" href="/quero-montar-meu-roteiro/?solicitacao=rio-essencial">Solicitar passeio</a></div></div></article>
+</div>
+</div>
+</section>
+</div>
+<footer class="footer lpv-site-footer">
+<div class="container footer-grid lpv-footer-grid">
+<section class="lpv-footer-brand" aria-label="LPV Turismo">
+<a class="lpv-footer-brand-link" href="/" aria-label="LPV Turismo"><img class="skip-lazy" alt="LPV Turismo" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/6.png"></a>
+<p>Experiências guiadas para descobrir o Rio além do óbvio.</p>
+</section>
+<section class="lpv-footer-registry" aria-label="Dados cadastrais">
+<h2 class="lpv-footer-heading">REGISTRO E PARCERIAS</h2>
+<div class="lpv-footer-info" aria-label="Dados cadastrais">
+<div><span>Número Cadastur</span><strong>19.276396.57-2</strong></div>
+<div><span>CNPJ</span><strong>68.500.624/0001-01</strong></div>
+</div>
+<div class="lpv-footer-logos" aria-label="Certificações e verticais">
+<div class="lpv-cadastur" aria-label="Cadastur"><img class="skip-lazy" alt="Cadastur" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/cadasturlogo-e1782824855735.png"></div>
+<a class="lpv-footer-lp-experiences" href="/lp-experiences/" aria-label="L&P Experiences"><img class="skip-lazy" alt="L&amp;P Experiences" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/06/4-1.png"></a>
+</div>
+</section>
+<section class="lpv-footer-connect" aria-label="CONECTE-SE">
+<h2 class="lpv-footer-heading">CONECTE-SE</h2>
+<nav class="lpv-social-links" aria-label="Canais oficiais"><a class="lpv-social-link lpv-social-link-instagram" href="https://www.instagram.com/lpvturismo/" target="_blank" rel="noopener noreferrer" title="Instagram LPV Turismo"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/—Pngtree—instagram-icon-instagram-logo-vector_3584852.png"><span class="lpv-visually-hidden">Instagram</span></a><a class="lpv-social-link lpv-social-link-google" href="https://share.google/o4c88LHxmB3aawfms" target="_blank" rel="noopener noreferrer" title="Google Business LPV Turismo"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/googlel-logo.png"><span class="lpv-visually-hidden">Google</span></a><a class="lpv-social-link lpv-social-link-getyourguide" href="https://www.getyourguide.com/lpv-turismo-s784036/" target="_blank" rel="noopener noreferrer" title="Produtos no GetYourGuide"><img class="lpv-social-icon skip-lazy" alt="" aria-hidden="true" data-no-lazy="1" decoding="async" src="https://lpvturismo.com/wp-content/uploads/2026/09/MAIN-GetYourGuide-stacked-logo-white-on-guiding-red-container-RGB.png"><span class="lpv-visually-hidden">GetYourGuide</span></a></nav>
+<h2 class="lpv-footer-heading lpv-footer-language-label">IDIOMA</h2>
+<div aria-label="Idiomas disponíveis" class="language-switcher footer-language"><a aria-current="page" class="active" href="/passeios/" title="Português">PT</a><a href="/es/paseos/" title="Español">ES</a><a href="/en/tours/" title="English">EN</a></div>
+</section>
+</div>
+<div class="container lpv-footer-bottom"><span>© 2026. Todos os direitos reservados.</span><a class="lpv-footer-privacy" href="/politica-de-privacidade/" hreflang="pt-BR">Política de Privacidade</a></div>
+</footer>
