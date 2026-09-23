@@ -5,6 +5,8 @@ __pycache__/
 node_modules/
 .env.*
 .staging-evidence/
+.production-evidence/
+.production-private-backup/
 backups/
 *.sql
 *.sql.gz
