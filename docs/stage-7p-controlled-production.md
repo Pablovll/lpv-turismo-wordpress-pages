@@ -37,22 +37,34 @@ mantem a senha somente no ambiente do processo remoto e transmite a saida do
 O HTML usa `wp_update_post()` e confirma o hash salvo. O CSS usa
 `wp_update_custom_css_post()`. AIOSEO 5.0.1.1 expoe o campo oficial
 `aioseo_meta_data` no endpoint `wp/v2/pages`; title e description sao aplicados
-por REST. A Application Password temporaria existe somente em memoria e e
-revogada em `finally`. Canonical, Open Graph, Twitter Cards e schema nao sao
-gerados pelo deployer e permanecem sob responsabilidade do AIOSEO.
+por REST. A Application Password temporaria e o token efemero existem somente
+em memoria e sao revogados/descartados em `finally`. Canonical, Open Graph,
+Twitter Cards e schema nao sao gerados pelo deployer e permanecem sob
+responsabilidade do AIOSEO.
 
 O deploy exige literalmente `DEPLOY LPV PRODUCAO`, revalida o hash do pacote e
-o estado respaldado, ativa maintenance mode somente na janela critica e tenta
-sempre desativa-lo. O LiteSpeed usa apenas o subcomando confirmado
-`wp litespeed-purge all`. Um bloqueador no auditor pos-deploy inicia rollback
-granular automatico; o dump nao e importado automaticamente.
+o estado respaldado e usa o MU-plugin temporario LPV Deploy Shield durante a
+janela critica. O maintenance mode nativo nao e mais usado como gate. O shield
+devolve 503 no frontend e na REST publica, permite WP-CLI e exige Application
+Password mais token efemero para a REST do deploy. O arquivo possui expiracao
+de 15 minutos e e removido no rollback e no `finally`.
+
+O LiteSpeed usa o subcomando oficial confirmado `wp litespeed-purge all`. Como
+essa versao implementa o comando por uma requisicao a `admin-ajax.php`, a
+limpeza e feita com o shield ativo, que libera AJAX administrativo. O cache e
+limpo uma vez antes de comprovar o 503, evitando uma resposta antiga servida
+antes do PHP, e novamente depois das alteracoes, antes de remover o shield. Um
+bloqueador no auditor pos-deploy inicia rollback granular automatico; o dump
+nao e importado automaticamente. Detalhes: `docs/stage-7p2-deploy-shield.md`.
 
 ## Estado da rodada
 
 Os resultados de preflight, baseline, backup e dry-run sao mantidos fora do
-Git. A primeira tentativa autorizada foi bloqueada no checkpoint CSS e executou
-rollback. O diagnostico completo e as correcoes estao em
-`docs/stage-7p1-post-rollback-diagnosis.md`.
+Git. A primeira tentativa autorizada foi bloqueada no checkpoint CSS e a
+segunda no checkpoint AIOSEO, porque o maintenance mode nativo devolveu 503
+para a REST. As duas executaram rollback e a producao voltou ao baseline. Os
+diagnosticos estao em `docs/stage-7p1-post-rollback-diagnosis.md` e
+`docs/stage-7p2-deploy-shield.md`.
 
 - Deploy em producao: BLOQUEADO / REVERTIDO.
 - Commit implantado: NENHUM.
@@ -61,10 +73,12 @@ rollback. O diagnostico completo e as correcoes estao em
 - Sete paginas EN: ja estavam publicadas; nenhum status mudou.
 - CSS: restaurado ao hash original.
 - SEO: valores originais preservados.
-- Cache de conclusao: NAO EXECUTADO.
+- Cache de conclusao: o comando falhou durante o rollback da segunda tentativa;
+  a causa foi diagnosticada, sem executar nova limpeza nesta etapa.
 - Auditoria pos-rollback: baseline restaurado.
-- Rollback executado: PARCIAL no relatorio antigo; estado publico restaurado,
-  com arquivos dos plugins inativos remanescentes.
+- Rollback executado: PARCIAL no relatorio da segunda tentativa por AIOSEO nao
+  requerido e purge falho; verificacao posterior confirmou baseline restaurado,
+  plugins aprovados instalados e inativos e nenhuma credencial temporaria.
 - FormSubmit: NAO TESTADO.
 - GA DebugView: NAO TESTADO.
 - Zoom real 200%: NAO TESTADO.

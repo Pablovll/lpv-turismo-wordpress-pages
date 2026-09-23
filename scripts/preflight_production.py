@@ -6,10 +6,12 @@ from pathlib import Path
 
 if __package__:
     from .preflight_staging import git, package_preflight, repository_scan
-    from .production_common import EVIDENCE, ORIGIN, WP_ROOT, dump_json, inspect_remote, load_pages
+    from .production_common import (EVIDENCE, ORIGIN, WP_ROOT, dump_json, inspect_remote,
+                                    load_pages, remote, wp)
 else:
     from preflight_staging import git, package_preflight, repository_scan
-    from production_common import EVIDENCE, ORIGIN, WP_ROOT, dump_json, inspect_remote, load_pages
+    from production_common import (EVIDENCE, ORIGIN, WP_ROOT, dump_json, inspect_remote,
+                                   load_pages, remote, wp)
 
 
 def main():
@@ -54,6 +56,11 @@ def main():
             page = state.get("pages", {}).get(str(row["id"]), {})
             if not page.get("exists") or page.get("post_type") != "page" or page.get("path") != row["url"]:
                 failures.append(f"page_{row['id']}_identity")
+        if wp(["maintenance-mode", "is-active", "--no-color"], check=False).returncode == 0:
+            failures.append("native_maintenance_active")
+        shield = WP_ROOT + "/wp-content/mu-plugins/lpv-deploy-shield.php"
+        if remote("test -e " + shield, check=False).returncode == 0:
+            failures.append("residual_deploy_shield")
     report = {
         "git_status": git("status", "--short", "--branch").decode().splitlines(),
         "package": package, "sensitive_data": sensitive,
