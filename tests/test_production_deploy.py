@@ -293,6 +293,22 @@ class BackupAndDeploymentTests(unittest.TestCase):
             thread.join()
             server.server_close()
 
+    def test_aioseo_restore_verifies_fresh_wp_cli_state_after_batch(self):
+        page_ids = [ROWS[0]["id"], ROWS[1]["id"]]
+        pages = {str(page_id): {"aioseo": {"title": "", "description": ""}}
+                 for page_id in page_ids}
+        state = {"pages": pages}
+        current = {"pages": pages}
+        journal = new_journal()
+        credential = {"uuid": "fixture", "secret": "fixture", "user": "fixture"}
+        with patch.object(deploy_production, "rest_request", return_value={}) as request, \
+             patch.object(deploy_production, "inspect_remote", return_value=current) as inspect:
+            result = apply_seo(state, credential, "fixture-token", journal,
+                               restore=True, page_ids=page_ids)
+        self.assertEqual(result["updated_ids"], page_ids)
+        self.assertEqual(request.call_count, 2)
+        inspect.assert_called_once_with()
+
     def test_application_password_and_shield_cleanup_are_in_execute_finally(self):
         source = (ROOT / "scripts/deploy_production.py").read_text(encoding="utf-8")
         execute_source = source[source.index("def execute("):source.index("def main(")]

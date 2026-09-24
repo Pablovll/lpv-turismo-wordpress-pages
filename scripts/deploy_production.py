@@ -610,11 +610,25 @@ def apply_seo(state, credential, deploy_token, journal, restore=False, page_ids=
         changed.append(page_id)
         if not restore and page_id not in journal["aioseo_changed_ids"]:
             journal["aioseo_changed_ids"].append(page_id)
+        if restore:
+            continue
         result = rest_request(f"/wp-json/wp/v2/pages/{page_id}?" + urlencode(
             {"context": "edit", "_fields": "id,aioseo_meta_data"}), credential, deploy_token)
         actual = result.get("aioseo_meta_data", {})
         if actual.get("title", "") != values["title"] or actual.get("description", "") != values["description"]:
             raise RuntimeError(f"AIOSEO verification failed for page {page_id}")
+    if restore and changed:
+        current = inspect_remote()
+        failures = []
+        for page_id in changed:
+            expected = state["pages"][str(page_id)].get("aioseo", {})
+            actual = current["pages"][str(page_id)].get("aioseo", {})
+            if (actual.get("title", "") != expected.get("title", "") or
+                    actual.get("description", "") != expected.get("description", "")):
+                failures.append(page_id)
+        if failures:
+            raise RuntimeError("AIOSEO rollback verification failed for page IDs: " +
+                               ",".join(str(page_id) for page_id in failures))
     return {"updated_ids": changed}
 
 
