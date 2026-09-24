@@ -37,6 +37,7 @@ function is_front_page() { return $GLOBALS['state']['front']; }
 function get_queried_object_id() { return $GLOBALS['state']['id']; }
 function get_permalink( $id ) { return $GLOBALS['state']['url']; }
 function get_option( $key ) { return $GLOBALS['state'][ $key ] ?? false; }
+function wpautop( $content ) { return '<p>' . $content . '</p>'; }
 
 $root = dirname( __DIR__, 2 );
 $rows = json_decode( file_get_contents( $root . '/docs/stage-4-language-map.json' ), true, 512, JSON_THROW_ON_ERROR )['pages'];
@@ -136,6 +137,16 @@ try {
 	reset_fixture( 20, '/es/' );
 	$GLOBALS['state']['front'] = true;
 	same( $original, apply_filters( 'frontpage_template_hierarchy', $original ), 'Do not replace alternate front page' );
+
+	reset_fixture( 17, '/passeios/' );
+	add_filter( 'the_content', 'wpautop' );
+	do_action( 'wp' );
+	same( false, has_filter( 'the_content', 'wpautop' ), 'Managed page disables wpautop' );
+	reset_fixture( 999, '/politica-de-privacidade/' );
+	add_filter( 'the_content', 'wpautop' );
+	do_action( 'wp' );
+	same( 10, has_filter( 'the_content', 'wpautop' ), 'Unmapped page retains wpautop' );
+	remove_filter( 'the_content', 'wpautop' );
 
 	// A saved template may override the plugin. This is an explicit manual preflight gate.
 	reset_fixture();

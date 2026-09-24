@@ -5,15 +5,17 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode, urlsplit, urlunsplit
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
 from bs4 import BeautifulSoup
 
 if __package__:
-    from .audit_staging import fragment_features
+    from .content_fidelity import (compare_rendered_content, compare_rendered_images,
+                                   compare_stored_content)
 else:
-    from audit_staging import fragment_features
+    from content_fidelity import (compare_rendered_content, compare_rendered_images,
+                                  compare_stored_content)
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "publication/stage-6"
@@ -29,6 +31,7 @@ class NoRedirects(HTTPRedirectHandler):
 class ProductionReader:
     def __init__(self):
         self.opener = build_opener(ProxyHandler({}), NoRedirects())
+        self.image_probes = {}
 
     def get(self, path):
         if not path.startswith("/") or path.startswith("//"):
@@ -51,36 +54,40 @@ class ProductionReader:
         except (URLError, TimeoutError, OSError, UnicodeError):
             return {"status": 0, "error": "request_failed_no_sensitive_details_logged"}
 
+    def probe_image(self, url):
+        if url in self.image_probes:
+            return self.image_probes[url]
+        parsed = urlsplit(url)
+        if (parsed.scheme != "https" or parsed.hostname != "lpvturismo.com"
+                or parsed.username or parsed.password or parsed.fragment
+                or not parsed.path.startswith("/wp-content/uploads/")):
+            self.image_probes[url] = 0
+            return 0
+        request_url = urlunsplit((parsed.scheme, parsed.netloc, quote(parsed.path, safe="/%:@"),
+                                  parsed.query, ""))
+        request = Request(request_url, headers={
+            "User-Agent": "LPV-Production-ReadOnly-Audit/1.0",
+            "Accept": "image/*",
+            "Range": "bytes=0-0",
+        }, method="GET")
+        try:
+            try:
+                response = self.opener.open(request, timeout=20)
+            except HTTPError as error:
+                response = error
+            with response:
+                status = response.status
+        except (URLError, TimeoutError, OSError, UnicodeError):
+            status = 0
+        self.image_probes[url] = status
+        return status
+
 
 def state(condition):
     return "APROVADO" if condition else "BLOQUEADOR"
 
 
-def image_urls(soup):
-    urls = set()
-    for image in soup.select("img[src], source[src]"):
-        for attribute in ("src",):
-            if image.get(attribute):
-                for candidate in image[attribute].split(","):
-                    value = candidate.strip().split(" ", 1)[0]
-                    if value:
-                        urls.add(value)
-    for node in soup.select("[style]"):
-        style = node.get("style", "")
-        start = 0
-        while True:
-            start = style.find("url(", start)
-            if start < 0:
-                break
-            end = style.find(")", start + 4)
-            if end < 0:
-                break
-            urls.add(style[start + 4:end].strip(" \"'"))
-            start = end + 1
-    return sorted(urls)
-
-
-def inspect_page(row, metadata, response):
+def inspect_page(row, metadata, response, stored_page=None, image_probe=None):
     soup = BeautifulSoup(response.get("body", ""), "html.parser")
     checks = {
         "http_200": state(response.get("status") == 200),
@@ -115,18 +122,32 @@ def inspect_page(row, metadata, response):
     privacy = soup.select('footer.lpv-site-footer a[href="/politica-de-privacidade/"]')
     checks["privacy_link"] = state(len(privacy) == 1 and privacy[0].get("hreflang") == "pt-BR")
     containers = soup.select(".wp-block-post-content")
-    expected_soup = BeautifulSoup(
-        (PACKAGE / "html" / row["source"].removeprefix("pages/")).read_bytes(), "html.parser")
-    fidelity = False
+    approved = (PACKAGE / "html" / row["source"].removeprefix("pages/")).read_text(encoding="utf-8")
+    stored = None
+    if stored_page is not None and stored_page.get("exists"):
+        stored = compare_stored_content(approved, stored_page.get("content", ""))
+    checks["stored_content_preserved"] = (
+        state(stored["content_preserved"]) if stored is not None else "NAO TESTADO")
+    checks["stored_image_urls_preserved"] = (
+        state(stored["image_urls_preserved"]) if stored is not None else "NAO TESTADO")
+
+    rendered_content = {"preserved": False, "failures": ["content_container"],
+                        "expected": {}, "observed": {}}
+    rendered_images = {"primary_preserved": False, "derived_valid": False,
+                       "failures": ["content_container"], "expected_primary_count": 0,
+                       "observed_primary_count": 0, "primary_http_urls": [],
+                       "derived_http_urls": []}
     if len(containers) == 1:
-        expected_features, expected_scripts, expected_text = fragment_features(expected_soup)
-        actual_features, actual_scripts, actual_text = fragment_features(containers[0])
-        fidelity = (expected_features == actual_features and expected_scripts == actual_scripts
-                    and expected_text == actual_text)
-    checks["approved_content_preserved"] = state(fidelity)
-    expected_images = image_urls(expected_soup)
-    actual_images = image_urls(containers[0]) if len(containers) == 1 else []
-    checks["image_urls_preserved"] = state(expected_images == actual_images)
+        rendered_content = compare_rendered_content(approved, containers[0])
+        rendered_images = compare_rendered_images(approved, containers[0])
+    checks["rendered_content_preserved"] = state(rendered_content["preserved"])
+    checks["rendered_primary_image_urls_preserved"] = state(rendered_images["primary_preserved"])
+    probe_results = {}
+    if image_probe:
+        for url in rendered_images["primary_http_urls"] + rendered_images["derived_http_urls"]:
+            probe_results[url] = image_probe(url)
+    reachable = all(status in (200, 206) for status in probe_results.values())
+    checks["derived_image_urls_valid"] = state(rendered_images["derived_valid"] and reachable)
     body = response.get("body", "").lower()
     checks["aioseo_present"] = state("all in one seo" in body or "aioseo" in body)
     checks["yoast_absent"] = state("yoast" not in body)
@@ -135,7 +156,17 @@ def inspect_page(row, metadata, response):
             "counts": {"main": len(soup.select("main")), "h1": len(soup.select("h1")),
                        "headers": len(soup.select("header")), "footers": len(soup.select("footer")),
                        "alternates": len(alternates)},
-            "image_url_count": len(actual_images)}
+            "fidelity": {
+                "rendered_content_failures": rendered_content["failures"],
+                "rendered_content_expected": rendered_content["expected"],
+                "rendered_content_observed": rendered_content["observed"],
+                "rendered_image_failures": rendered_images["failures"],
+                "expected_primary_images": rendered_images["expected_primary_count"],
+                "observed_primary_images": rendered_images["observed_primary_count"],
+                "image_probe_count": len(probe_results),
+                "failed_image_probe_count": sum(status not in (200, 206)
+                                                  for status in probe_results.values()),
+            }}
 
 
 def inspect_non_lpv(response, expected_status=200):
@@ -146,10 +177,13 @@ def inspect_non_lpv(response, expected_status=200):
             "no_lpv_experiences_wrapper": state(not soup.select(".lp-experiences-page"))}
 
 
-def audit(reader):
+def audit(reader, stored_pages=None):
     rows = json.loads((PACKAGE / "language-map.json").read_bytes())["pages"]
     metadata = {row["id"]: row for row in json.loads((PACKAGE / "aioseo-metadata.json").read_bytes())}
-    pages = [inspect_page(row, metadata[row["id"]], reader.get(row["url"])) for row in rows]
+    pages = [inspect_page(
+        row, metadata[row["id"]], reader.get(row["url"]),
+        (stored_pages or {}).get(str(row["id"])), getattr(reader, "probe_image", None),
+    ) for row in rows]
     privacy_response = reader.get("/politica-de-privacidade/")
     privacy_soup = BeautifulSoup(privacy_response.get("body", ""), "html.parser")
     privacy = {"http_200": state(privacy_response.get("status") == 200),

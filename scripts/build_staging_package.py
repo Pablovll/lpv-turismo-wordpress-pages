@@ -75,7 +75,7 @@ def build():
     files["wordpress/lpv-content-only.html"] = template
     template_files = {"lpv-page-templates/" + name: (plugin / name).read_bytes()
                       for name in ("lpv-page-templates.php", "README.md", "templates/lpv-content-only.html")}
-    template_zip = OUTPUT / "plugins/lpv-page-templates-1.0.0.zip"
+    template_zip = OUTPUT / "plugins/lpv-page-templates-1.0.1.zip"
     template_zip.parent.mkdir(parents=True, exist_ok=True)
     archive_bytes(template_files, template_zip)
     files["plugins/" + template_zip.name] = template_zip.read_bytes()

@@ -28,7 +28,9 @@ class Stage6StaticTests(unittest.TestCase):
     def test_scoped_native_hooks_only(self):
         source = (PLUGIN / "lpv-page-templates.php").read_text(encoding="utf-8")
         self.assertEqual(re.findall(r"add_(?:action|filter)\( '([^']+)'", source),
-                         ["page_template_hierarchy", "frontpage_template_hierarchy", "init"])
+                         ["page_template_hierarchy", "frontpage_template_hierarchy", "init", "wp"])
+        self.assertIn("remove_filter( 'the_content', 'wpautop' )", source)
+        self.assertIn("lpv_page_templates_is_managed_request()", source)
         self.assertIn("register_block_template(", source)
         self.assertIn("Requires at least: 6.7", source)
         self.assertIn("if ( ! defined( 'ABSPATH' ) )", source)
@@ -88,7 +90,7 @@ class Stage6StaticTests(unittest.TestCase):
                          (ROOT / "publication/stage-4/aioseo-metadata.csv").read_bytes())
         self.assertEqual((PACKAGE / "plugins/lpv-language-seo-1.0.0.zip").read_bytes(),
                          (ROOT / "publication/stage-5/lpv-language-seo-1.0.0.zip").read_bytes())
-        with zipfile.ZipFile(PACKAGE / "plugins/lpv-page-templates-1.0.0.zip") as archive:
+        with zipfile.ZipFile(PACKAGE / "plugins/lpv-page-templates-1.0.1.zip") as archive:
             self.assertEqual(set(archive.namelist()), {"lpv-page-templates/" + n for n in (
                 "lpv-page-templates.php", "README.md", "templates/lpv-content-only.html")})
             for name in archive.namelist():

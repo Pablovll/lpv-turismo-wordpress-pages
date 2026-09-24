@@ -42,6 +42,14 @@ LPV_PLUGINS = {
     "lpv-page-templates": "lpv-page-templates/lpv-page-templates.php",
     "lpv-language-seo": "lpv-language-seo/lpv-language-seo.php",
 }
+LPV_PLUGIN_ARCHIVES = {
+    "lpv-page-templates": "lpv-page-templates-1.0.1.zip",
+    "lpv-language-seo": "lpv-language-seo-1.0.0.zip",
+}
+LPV_PLUGIN_VERSIONS = {
+    "lpv-page-templates": "1.0.1",
+    "lpv-language-seo": "1.0.0",
+}
 SHIELD_SOURCE = ROOT / "wordpress/deploy/lpv-deploy-shield.php"
 SHIELD_REMOTE = WP_ROOT + "/wp-content/mu-plugins/lpv-deploy-shield.php"
 SHIELD_TTL_SECONDS = 15 * 60
@@ -158,7 +166,8 @@ def package_hash():
 
 def deployment_code_hash():
     files = [ROOT / "scripts/deploy_production.py", ROOT / "scripts/production_common.py",
-             ROOT / "scripts/audit_production.py", ROOT / "scripts/backup_production.py"]
+             ROOT / "scripts/audit_production.py", ROOT / "scripts/content_fidelity.py",
+             ROOT / "scripts/backup_production.py"]
     files.extend(sorted((ROOT / "wordpress/deploy").glob("*.php")))
     return sha256_bytes(b"".join(path.relative_to(ROOT).as_posix().encode() + b"\0" + path.read_bytes()
                                  for path in files))
@@ -207,8 +216,8 @@ def render_deploy_shield(token, now=None):
     return rendered.encode("utf-8"), expires_at
 
 
-def local_plugin_inventory(slug):
-    package = PACKAGE / "plugins" / f"{slug}-1.0.0.zip"
+def local_plugin_inventory(slug, archive_name=None):
+    package = PACKAGE / "plugins" / (archive_name or LPV_PLUGIN_ARCHIVES[slug])
     inventory = {}
     with zipfile.ZipFile(package) as archive:
         for item in archive.infolist():
@@ -237,6 +246,12 @@ def remote_plugin_inventory(slug):
 
 def plugin_matches_package(slug):
     return remote_plugin_inventory(slug) == local_plugin_inventory(slug)
+
+
+def plugin_matches_previous_approved(slug):
+    previous = {"lpv-page-templates": "lpv-page-templates-1.0.0.zip"}.get(slug)
+    return bool(previous and (PACKAGE / "plugins" / previous).is_file()
+                and remote_plugin_inventory(slug) == local_plugin_inventory(slug, previous))
 
 
 def litespeed_cli_check():
@@ -306,9 +321,18 @@ def dry_run(backup):
             en_to_publish.append(row["id"])
     target_css = (PACKAGE / "css/lpv-style.css").read_bytes()
     plugin_package_matches = {}
+    plugin_actions = {}
     for slug in LPV_PLUGINS:
         plugin_package_matches[slug] = plugin_matches_package(slug)
-        if not plugin_package_matches[slug]:
+        installed = remote_plugin_inventory(slug)
+        if plugin_package_matches[slug]:
+            plugin_actions[slug] = "activate_or_reuse"
+        elif installed is None:
+            plugin_actions[slug] = "install"
+        elif plugin_matches_previous_approved(slug):
+            plugin_actions[slug] = "upgrade_approved_previous_version"
+        else:
+            plugin_actions[slug] = "blocked_unreviewed_files"
             failures.append(f"{slug}_installed_files_differ")
     shield_probe_token = "dry-run-only-" + "x" * 32
     rendered_shield, shield_expires_at = render_deploy_shield(shield_probe_token, now=0)
@@ -338,6 +362,11 @@ def dry_run(backup):
             "removal_planned": True,
         },
         "plugin_package_matches": plugin_package_matches,
+        "plugin_actions": plugin_actions,
+        "fidelity_criteria": ["stored_content_preserved", "rendered_content_preserved",
+                              "stored_image_urls_preserved",
+                              "rendered_primary_image_urls_preserved",
+                              "derived_image_urls_valid"],
         "litespeed_purge": litespeed_cli,
         "native_maintenance_active": native_maintenance,
         "residual_deploy_shield": residual_shield,
@@ -345,7 +374,8 @@ def dry_run(backup):
                                 "shield_public_rest_503", "shield_authorized_rest", "template_plugin",
                                 "language_plugin", "css", "22_page_contents", "aioseo_rest",
                                 "en_status", "litespeed_cache", "deploy_shield_removed",
-                                "homepage_200", "public_audit", "application_password_revoked"],
+                                "homepage_200", "stored_content_audit", "public_rendered_audit",
+                                "application_password_revoked"],
         "rollback": {"journaled": True, "idempotent": True, "aioseo_empty_is_not_required": True},
         "failures": sorted(set(failures)), "status": "APROVADO" if not failures else "BLOQUEADOR",
     }
@@ -508,15 +538,18 @@ def activate_plugin(remote_dir, previous, slug, main_file, journal, journal_key,
     installed = wp(["plugin", "is-installed", slug, "--no-color"], check=False).returncode == 0
     files_replaced = False
     if installed and not plugin_matches_package(slug):
+        if not plugin_matches_previous_approved(slug):
+            raise RuntimeError(f"Unreviewed installed plugin files: {slug}")
         journal[journal_key] = True
         file_changes[slug] = True
-        wp(["plugin", "install", remote_dir + f"/package/plugins/{slug}-1.0.0.zip",
+        wp(["plugin", "install", remote_dir + "/package/plugins/" + LPV_PLUGIN_ARCHIVES[slug],
             "--force", "--no-color"])
         files_replaced = True
     elif not installed:
         journal[journal_key] = True
         file_changes[slug] = True
-        wp(["plugin", "install", remote_dir + f"/package/plugins/{slug}-1.0.0.zip", "--no-color"])
+        wp(["plugin", "install", remote_dir + "/package/plugins/" + LPV_PLUGIN_ARCHIVES[slug],
+            "--no-color"])
         files_replaced = True
     active_before = wp(["plugin", "is-active", slug, "--no-color"], check=False).returncode == 0
     if not active_before:
@@ -524,7 +557,7 @@ def activate_plugin(remote_dir, previous, slug, main_file, journal, journal_key,
         wp(["plugin", "activate", slug, "--no-color"])
     active_after = wp(["plugin", "is-active", slug, "--no-color"], check=False).returncode == 0
     version = wp(["plugin", "get", slug, "--field=version", "--no-color"]).stdout.decode().strip()
-    if version != "1.0.0" or not active_after or not plugin_matches_package(slug):
+    if version != LPV_PLUGIN_VERSIONS[slug] or not active_after or not plugin_matches_package(slug):
         raise RuntimeError(f"Plugin checkpoint failed: {slug}")
     changed = files_replaced or active_after != was_active or not existed
     journal[journal_key] = journal[journal_key] or changed
@@ -959,7 +992,8 @@ def execute(backup, authorization):
         attempt_event(attempt, phase, "COMPLETED", details={"http_status": 200})
 
         phase = "public_audit"
-        post = audit(ProductionReader())
+        stored_after = inspect_remote()
+        post = audit(ProductionReader(), stored_pages=stored_after.get("pages", {}))
         dump_json(EVIDENCE / "post-deploy.json", post)
         if post["status"] != "APROVADO":
             raise RuntimeError("Post-deploy audit contains blocking findings.")

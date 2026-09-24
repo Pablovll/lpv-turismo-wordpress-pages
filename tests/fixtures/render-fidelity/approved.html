@@ -1,0 +1,30 @@
+<div class="lpv-simple-page">
+  <header class="topbar" data-layout="approved">
+    <nav aria-label="Primary navigation"><a href="/passeios/">Passeios</a></nav>
+  </header>
+  <section class="lpv-content-section hero" id="intro">
+    <h1>Rio &amp; cultura</h1>
+    <p>Uma experiência para o ritmo do grupo.</p>
+    <a class="cta lpv-button" href="/quero-montar-meu-roteiro/">Solicitar proposta</a>
+    <img alt="Paisagem do Rio" src="https://lpvturismo.com/wp-content/uploads/2026/06/photo-scaled.jpg">
+  </section>
+  <section class="lpv-content-section" id="request">
+    <h2>Conte sua ideia</h2>
+    <form action="https://formsubmit.co/info@lpvturismo.com" method="post" aria-label="Solicitação" data-context="tour">
+      <input type="hidden" name="_subject" value="Nova solicitação">
+      <label for="email">E-mail</label>
+      <input id="email" type="email" name="email" required>
+      <label for="language">Idioma</label>
+      <select id="language" name="language"><option value="pt">Português</option><option value="en">English</option></select>
+      <button type="submit" name="intent" value="proposal">Enviar solicitação</button>
+    </form>
+  </section>
+  <script>
+    const button = document.querySelector('.lpv-button');
+    button.addEventListener('click', () => button.dataset.clicked = 'yes');
+  </script>
+  <style>
+    .hero { background-image: url('https://lpvturismo.com/wp-content/uploads/2026/06/hero.jpg'); }
+  </style>
+  <footer class="footer lpv-site-footer"><a href="/politica-de-privacidade/">Privacidade</a></footer>
+</div>

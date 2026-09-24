@@ -1,9 +1,9 @@
 {
   "LANGUAGE-PLUGIN.md": "6216138b3a81fb81da94f4d0cc77a5a1cbb20b2f51c123f82882e94bc1816d98",
   "PAGE-INVENTORY.md": "2fdd8425e6abf57c987641fe60c338816da2e6fb018dda5688781806c3b47989",
-  "RUNBOOK.md": "ef3e0522de3bebe7b2da500a6b630e4ad62243d4cd221713e5cd6b775b81e8d0",
+  "RUNBOOK.md": "2c92db9852522d3af8607ecb21b1087e7a4ea4f4f7f03c2b3aea50bda464fae5",
   "STRUCTURAL-VALIDATION.json": "13d40fb1c6e0a42b9e72c6a9ec50d6c5eb2c80e5fb1efe0aeea35e24d989505a",
-  "TEMPLATE-PLUGIN.md": "ebe35947d6c1c2ae85ac9ebf2869abce138d5faa20432f0f9bec9405ce9b52f9",
+  "TEMPLATE-PLUGIN.md": "d09512fa677ff3447c46153abde314454c00ea60e27e1bc816479de71589f714",
   "aioseo-metadata.csv": "9553fac2d98f76669490327e11716ef8c418fadcdb141af4f8c5593363323e3d",
   "aioseo-metadata.json": "9f6c8cb04fe1029bcc39530d89db09d58ed4246676b0e5deee55e9da1455e5d3",
   "application-plan.json": "74fa642e4f583658cbe66f09ae58c1a9e02d69471cfca49598e7d665354138dd",
@@ -32,7 +32,7 @@
   "html/pt/lp-experiences.html": "b5b6047f421988c256ff0a607302a825e127715aeba22e4106f1e90e22d2b948",
   "language-map.json": "132eaf2c0f870bfd4a138465842767511fa642d1ed3b18f28d67d3c33607854a",
   "plugins/lpv-language-seo-1.0.0.zip": "fe9163b94f809174c835fa8255ea9fda44e6ca8633a50289491a96cd33065172",
-  "plugins/lpv-page-templates-1.0.0.zip": "90c35cbc9bd8f136c31094bda2206fe1f4f492286c4a461e01572064f7620eb6",
+  "plugins/lpv-page-templates-1.0.1.zip": "3a0b0954014f1103494318d89e357711e22209f2da9d62bf6f74678a3f05bc1f",
   "url-map.json": "6970fbc813676e04ad1c359c075398a661154c54438cc7a5630c7289056b47f6",
   "wordpress/lpv-content-only.html": "f0568c60bc6da0f6b2119834f11f4960188db9176f5d40ecc4db9af3d0cb2e01"
 }

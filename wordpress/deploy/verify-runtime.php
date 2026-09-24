@@ -12,6 +12,7 @@ $result = array(
 	'language_plugin_active' => is_plugin_active( 'lpv-language-seo/lpv-language-seo.php' ),
 	'template_registered' => false,
 	'language_hooks_registered' => false,
+	'wpautop_guard_registered' => false,
 );
 if ( function_exists( 'get_block_templates' ) ) {
 	foreach ( get_block_templates( array(), 'wp_template' ) as $template ) {
@@ -22,5 +23,6 @@ if ( function_exists( 'get_block_templates' ) ) {
 }
 $result['language_hooks_registered'] = has_filter( 'language_attributes', 'lpv_language_seo_language_attributes' )
 	&& has_action( 'wp_head', 'lpv_language_seo_hreflang' );
+$result['wpautop_guard_registered'] = false !== has_action( 'wp', 'lpv_page_templates_disable_wpautop' );
 $result['status'] = ! in_array( false, $result, true ) ? 'APROVADO' : 'BLOQUEADOR';
 echo 'LPV_RESULT:' . wp_json_encode( $result );

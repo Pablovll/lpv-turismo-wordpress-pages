@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LPV Page Templates
  * Description: Scoped content-only block template for the approved LPV pages.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Requires at least: 6.7
  * Requires PHP: 7.4
  * License: GPL-2.0-or-later
@@ -40,32 +40,47 @@ function lpv_page_templates_paths() {
 	);
 }
 
-function lpv_page_templates_hierarchy( $templates ) {
+/** True only for the approved page identity in the expected theme and request context. */
+function lpv_page_templates_is_managed_request() {
 	if ( is_admin() || is_feed() || is_embed() || ! is_singular( 'page' )
 		|| ! wp_is_block_theme() || 'twentytwentyfive' !== get_template() ) {
-		return $templates;
+		return false;
 	}
 
 	$id    = get_queried_object_id();
 	$paths = lpv_page_templates_paths();
 	if ( ! isset( $paths[ $id ] ) ) {
-		return $templates;
+		return false;
 	}
 
 	// A root-domain staging clone may differ in host, but not in page IDs or paths.
 	$permalink = get_permalink( $id );
 	if ( ! $permalink || wp_parse_url( $permalink, PHP_URL_PATH ) !== $paths[ $id ] ) {
-		return $templates;
+		return false;
 	}
 	if ( 7 === $id || is_front_page() ) {
 		if ( 7 !== $id || 'page' !== get_option( 'show_on_front' )
 			|| 7 !== (int) get_option( 'page_on_front' ) || ! is_front_page() ) {
-			return $templates;
+			return false;
 		}
+	}
+	return true;
+}
+
+function lpv_page_templates_hierarchy( $templates ) {
+	if ( ! lpv_page_templates_is_managed_request() ) {
+		return $templates;
 	}
 
 	array_unshift( $templates, 'lpv-content-only.php' );
 	return array_values( array_unique( $templates ) );
+}
+
+/** Approved fragments are complete HTML; wpautop corrupts their inline JavaScript and CSS. */
+function lpv_page_templates_disable_wpautop() {
+	if ( lpv_page_templates_is_managed_request() ) {
+		remove_filter( 'the_content', 'wpautop' );
+	}
 }
 
 function lpv_page_templates_register() {
@@ -101,3 +116,4 @@ function lpv_page_templates_register() {
 }
 
 add_action( 'init', 'lpv_page_templates_register' );
+add_action( 'wp', 'lpv_page_templates_disable_wpautop', 20 );

@@ -41,7 +41,7 @@ nativas extras. Nao copiar os fragmentos para dentro do template.
 
 ## Decisao de implementacao
 
-Plugin separado **LPV Page Templates 1.0.0**, WordPress 6.7+/PHP 7.4+.
+Plugin separado **LPV Page Templates 1.0.1**, WordPress 6.7+/PHP 7.4+.
 Registra `lpv-page-templates//lpv-content-only` pela API nativa. Filtra somente
 `page_template_hierarchy` e `frontpage_template_hierarchy` para as 22 paginas
 identificadas por ID E caminho aprovado. A origem local do template e fixa;
@@ -112,7 +112,7 @@ reconstruir identico. Nenhum framework, endpoint ou URL de imagem foi trocado.
 para enviar inteiro ao WordPress. Extrair localmente; somente os dois ZIPs
 em `plugins/` sao instalaveis em Plugins > Adicionar plugin.
 
-- `plugins/lpv-page-templates-1.0.0.zip`: template e selecao de layout.
+- `plugins/lpv-page-templates-1.0.1.zip`: template, selecao de layout e protecao escopada contra `wpautop` nos scripts aprovados.
 - `plugins/lpv-language-seo-1.0.0.zip`: arquivo identico ao aprovado na Etapa 5.
 - `html/`: 22 fragmentos byte-identicos as fontes; nao inserir documentos completos.
 - `css/lpv-style.css`: CSS final identico ao pacote da Etapa 4.

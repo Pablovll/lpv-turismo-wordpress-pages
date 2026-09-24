@@ -1,0 +1,13 @@
+{
+  "text_removed": ["Uma experiência para o ritmo do grupo.", ""],
+  "cta_removed": ["<a class=\"cta lpv-button\" href=\"/quero-montar-meu-roteiro/\">Solicitar proposta</a>", ""],
+  "href_changed": ["href=\"/quero-montar-meu-roteiro/\"", "href=\"/outros-servicos/\""],
+  "form_action_changed": ["https://formsubmit.co/info@lpvturismo.com", "https://example.test/form"],
+  "field_name_changed": ["name=\"email\"", "name=\"contact_email\""],
+  "image_url_changed": ["photo-scaled.jpg", "another-photo.jpg"],
+  "image_removed": ["<img alt=\"Paisagem do Rio\" src=\"https://lpvturismo.com/wp-content/uploads/2026/06/photo-scaled.jpg\">", ""],
+  "script_removed": ["<script>\n    const button = document.querySelector('.lpv-button');\n    button.addEventListener('click', () => button.dataset.clicked = 'yes');\n  </script>", ""],
+  "class_removed": ["lpv-content-section hero", "hero"],
+  "id_removed": [" id=\"intro\"", ""],
+  "id_duplicated": ["id=\"request\"", "id=\"intro\""]
+}

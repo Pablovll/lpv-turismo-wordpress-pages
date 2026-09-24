@@ -1,4 +1,4 @@
-# LPV Page Templates 1.0.0
+# LPV Page Templates 1.0.1
 
 Etapa 6, 22/09/2026. Preparado localmente; nao instalado no WordPress.
 Requer WordPress 6.7+, PHP 7.4+ e Twenty Twenty-Five ativo (ou tema filho dele).
@@ -17,6 +17,13 @@ Nao inclui `core/template-part` header/footer, `core/post-title` nem imagem
 destacada. Cada fragmento aprovado ja fornece um H1, header LPV e footer LPV.
 Nao editar o tema pai, nao trocar tema e nao apagar as partes compartilhadas:
 elas continuam disponiveis para politica, posts, busca, 404 e outras paginas.
+
+Os fragmentos aprovados ja sao HTML completo e incluem JavaScript inline. Na
+versao 1.0.1, o plugin remove o filtro `wpautop` somente durante requests que
+passam simultaneamente pelos 22 IDs, caminhos, tipo de pagina e tema aprovados.
+Isso impede a insercao de tags `<p>`/`<br>` dentro dos blocos `script` e `style`.
+`wptexturize`, blocos, shortcodes e todos os filtros de paginas fora do mapa
+permanecem ativos.
 
 A selecao exige ID E caminho. Aceita outro dominio de staging com a mesma
 estrutura na raiz, mas nao IDs novos, caminhos alterados ou instalacao em
@@ -45,7 +52,7 @@ layout; feed/embed/painel e paginas fora do mapa nao sao selecionados.
    arquivo do tema com esse slug tem precedencia sobre o registro do plugin.
    Exportar essa copia; limpar SOMENTE essa personalizacao se confirmado que
    deve ser substituida. Nao apagar todos os templates ou partes do tema.
-5. Instalar `lpv-page-templates-1.0.0.zip` em Plugins > Adicionar plugin e ativar.
+5. Instalar `lpv-page-templates-1.0.1.zip` em Plugins > Adicionar plugin e ativar.
    Nao atribuir manualmente este modelo a paginas fora do mapa, nem editar o
    modelo no Site Editor: isso cria uma sobreposicao persistente no banco.
 6. Seguir o runbook da Etapa 6: idioma, CSS, HTML, AIOSEO, status EN e cache.

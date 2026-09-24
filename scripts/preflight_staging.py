@@ -37,7 +37,7 @@ def package_preflight(folder=PACKAGE, archive=None):
         for name in {*manifest, "manifest.json"}:
             if name not in zipped.namelist() or zipped.read(name) != (folder / name).read_bytes():
                 failures.append("archive:" + name)
-    required = {"plugins/lpv-page-templates-1.0.0.zip", "plugins/lpv-language-seo-1.0.0.zip",
+    required = {"plugins/lpv-page-templates-1.0.1.zip", "plugins/lpv-language-seo-1.0.0.zip",
                 "css/lpv-style.css", "aioseo-metadata.json", "aioseo-metadata.csv",
                 "url-map.json", "language-map.json", "wordpress/lpv-content-only.html"}
     failures.extend(sorted(required - manifest.keys()))

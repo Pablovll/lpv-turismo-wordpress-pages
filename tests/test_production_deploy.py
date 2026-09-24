@@ -88,10 +88,29 @@ class ProductionAuditTests(unittest.TestCase):
                 row = next(item for item in ROWS if item["url"] == path)
                 return {"status": 200, "url": row["canonical"], "body": production_document(row)}
 
-        report = audit(Reader())
+        stored = {}
+        for row in ROWS:
+            content = (PACKAGE / "html" / row["source"].removeprefix("pages/")).read_text(encoding="utf-8")
+            stored[str(row["id"])] = {"exists": True, "content": content}
+        report = audit(Reader(), stored_pages=stored)
         self.assertEqual(report["status"], "APROVADO")
         self.assertEqual(report["blockers"], [])
         self.assertEqual(report["forms_sent"], 0)
+        for page in report["pages"]:
+            for check in ("stored_content_preserved", "rendered_content_preserved",
+                          "stored_image_urls_preserved",
+                          "rendered_primary_image_urls_preserved",
+                          "derived_image_urls_valid"):
+                self.assertEqual(page["checks"][check], "APROVADO")
+
+    def test_wpautop_script_corruption_remains_a_real_render_blocker(self):
+        row = ROWS[0]
+        content = (PACKAGE / "html" / row["source"].removeprefix("pages/")).read_text(encoding="utf-8")
+        corrupted = content.replace("  }\n\n  const language", "  }</p>\n<p>  const language", 1)
+        from scripts.content_fidelity import compare_rendered_content
+        result = compare_rendered_content(content, corrupted)
+        self.assertFalse(result["preserved"])
+        self.assertIn("scripts", result["failures"])
 
     def test_l_and_p_has_no_artificial_translation(self):
         row = next(item for item in ROWS if item["id"] == 255)
@@ -144,6 +163,22 @@ class BackupAndDeploymentTests(unittest.TestCase):
         self.assertNotIn("wp db query", deployer)
         self.assertNotIn("formsubmit.co", deployer.lower())
         self.assertNotIn("debugview", deployer.lower())
+
+    def test_dry_run_names_all_five_fidelity_contracts(self):
+        source = (ROOT / "scripts/deploy_production.py").read_text(encoding="utf-8")
+        for check in ("stored_content_preserved", "rendered_content_preserved",
+                      "stored_image_urls_preserved", "rendered_primary_image_urls_preserved",
+                      "derived_image_urls_valid"):
+            self.assertIn(check, source)
+
+    def test_page_template_upgrade_accepts_only_the_approved_previous_archive(self):
+        slug = "lpv-page-templates"
+        previous = deploy_production.local_plugin_inventory(
+            slug, "lpv-page-templates-1.0.0.zip")
+        with patch.object(deploy_production, "remote_plugin_inventory", return_value=previous):
+            self.assertTrue(deploy_production.plugin_matches_previous_approved(slug))
+        with patch.object(deploy_production, "remote_plugin_inventory", return_value={"unknown.php": "bad"}):
+            self.assertFalse(deploy_production.plugin_matches_previous_approved(slug))
 
     def test_helper_protocol_ignores_output_noise_and_prevents_css_false_negative(self):
         output = b"non-structured plugin notice\nLPV_RESULT:{\"status\":\"APROVADO\",\"changed\":false}\n"
