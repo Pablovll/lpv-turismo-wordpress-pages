@@ -9,7 +9,7 @@ from pathlib import Path
 from threading import Thread
 from unittest.mock import patch
 
-from scripts.audit_production import ORIGIN, audit
+from scripts.audit_production import ORIGIN, audit, classify_baseline
 from scripts.backup_production import validate_backup
 from scripts import deploy_production
 from scripts.deploy_production import (AUTHORIZATION, apply_seo,
@@ -74,6 +74,60 @@ def production_document(row):
 
 
 class ProductionAuditTests(unittest.TestCase):
+    def test_preexisting_target_differences_do_not_block_baseline(self):
+        strict = {
+            "status": "BLOQUEADOR",
+            "blockers": ["page:7:single_h1", "page:7:lang"],
+            "pages": [{"id": 7, "checks": {
+                "http_200": "APROVADO", "single_h1": "BLOQUEADOR",
+                "lang": "BLOQUEADOR", "aioseo_present": "APROVADO",
+                "yoast_absent": "APROVADO",
+            }}],
+            "privacy": {}, "search": {}, "not_found": {},
+            "sample_post": {"status": "NAO TESTADO"},
+        }
+        baseline = classify_baseline(strict)
+        self.assertEqual(baseline["status"], "APROVADO")
+        self.assertEqual(baseline["baseline_operational_safety"]["blocker_count"], 0)
+        self.assertEqual(baseline["baseline_target_differences"]["status"], "EXPECTED_CHANGE")
+        self.assertEqual(baseline["pages"][0]["checks"]["single_h1"], "EXPECTED_CHANGE")
+
+    def test_real_operational_baseline_failures_still_block(self):
+        strict = {
+            "status": "BLOQUEADOR",
+            "blockers": ["page:7:http_200", "page:7:aioseo_present", "privacy:http_200"],
+            "pages": [{"id": 7, "checks": {
+                "http_200": "BLOQUEADOR", "single_h1": "APROVADO",
+                "aioseo_present": "BLOQUEADOR", "yoast_absent": "APROVADO",
+            }}],
+            "privacy": {"http_200": "BLOQUEADOR"}, "search": {}, "not_found": {},
+            "sample_post": {"status": "NAO TESTADO"},
+        }
+        baseline = classify_baseline(strict)
+        self.assertEqual(baseline["status"], "BLOQUEADOR")
+        self.assertEqual(baseline["baseline_operational_safety"]["blocker_count"], 3)
+        self.assertEqual(baseline["baseline_target_differences"]["status"], "NO_CHANGE")
+
+    def test_baseline_classification_does_not_relax_postdeploy_report(self):
+        strict = {
+            "status": "BLOQUEADOR", "blockers": ["page:7:rendered_content_preserved"],
+            "pages": [{"id": 7, "checks": {"rendered_content_preserved": "BLOQUEADOR"}}],
+            "privacy": {}, "search": {}, "not_found": {},
+            "sample_post": {"status": "NAO TESTADO"},
+        }
+        baseline = classify_baseline(strict)
+        self.assertEqual(baseline["status"], "APROVADO")
+        self.assertEqual(strict["status"], "BLOQUEADOR")
+        self.assertEqual(strict["pages"][0]["checks"]["rendered_content_preserved"],
+                         "BLOQUEADOR")
+        self.assertEqual(baseline["post_deploy_acceptance"]["blocker_count"], 1)
+
+    def test_executor_keeps_strict_postdeploy_audit(self):
+        source = (ROOT / "scripts/deploy_production.py").read_text(encoding="utf-8")
+        execute_source = source[source.index("def execute("):source.index("def main(")]
+        self.assertIn("post = audit(ProductionReader(), stored_pages=", execute_source)
+        self.assertNotIn("baseline_audit", execute_source)
+
     def test_complete_fake_production_audit(self):
         class Reader:
             def get(self, path):

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Read-only LPV production audit. Requires an explicit production gate."""
 import argparse
+import copy
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,6 +22,9 @@ ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "publication/stage-6"
 ORIGIN = "https://lpvturismo.com"
 MAX_BYTES = 5 * 1024 * 1024
+BASELINE_OPERATIONAL_PAGE_CHECKS = {
+    "http_200", "expected_url_no_redirect", "aioseo_present", "yoast_absent",
+}
 
 
 class NoRedirects(HTTPRedirectHandler):
@@ -276,17 +280,75 @@ def audit(reader, stored_pages=None):
             "forms_sent": 0, "ga_debugview": "NAO TESTADO", "zoom_200": "NAO TESTADO"}
 
 
+def classify_baseline(strict_report):
+    """Separate current operational safety from expected pre-deploy target differences."""
+    report = copy.deepcopy(strict_report)
+    strict_blockers = list(strict_report.get("blockers", []))
+    operational_blockers = []
+    target_differences = []
+
+    for page in report.get("pages", []):
+        for key, value in page.get("checks", {}).items():
+            if value != "BLOQUEADOR":
+                continue
+            finding = f"page:{page['id']}:{key}"
+            if key in BASELINE_OPERATIONAL_PAGE_CHECKS:
+                operational_blockers.append(finding)
+            else:
+                page["checks"][key] = "EXPECTED_CHANGE"
+                target_differences.append(finding)
+
+    for section_name in ("privacy", "search", "not_found", "sample_post"):
+        section = report.get(section_name, {})
+        if section_name == "sample_post" and section.get("status") == "NAO TESTADO":
+            continue
+        prefix = "404" if section_name == "not_found" else (
+            "post" if section_name == "sample_post" else section_name)
+        for key, value in section.items():
+            if value == "BLOQUEADOR":
+                operational_blockers.append(f"{prefix}:{key}")
+
+    classified = set(operational_blockers) | set(target_differences)
+    operational_blockers.extend(item for item in strict_blockers if item not in classified)
+    report["mode"] = "pre-deploy baseline"
+    report["post_deploy_acceptance"] = {
+        "status": strict_report.get("status"),
+        "blocker_count": len(strict_blockers),
+        "blockers": strict_blockers,
+    }
+    report["baseline_operational_safety"] = {
+        "status": "APROVADO" if not operational_blockers else "BLOQUEADOR",
+        "blocker_count": len(operational_blockers),
+        "blockers": operational_blockers,
+    }
+    report["baseline_target_differences"] = {
+        "status": "EXPECTED_CHANGE" if target_differences else "NO_CHANGE",
+        "difference_count": len(target_differences),
+        "differences": target_differences,
+    }
+    report["blockers"] = operational_blockers
+    report["status"] = "APROVADO" if not operational_blockers else "BLOQUEADOR"
+    return report
+
+
+def baseline_audit(reader):
+    return classify_baseline(audit(reader))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--confirm-production", action="store_true")
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--mode", choices=("baseline", "post-deploy"), default="post-deploy")
     args = parser.parse_args()
     if not args.confirm_production:
         parser.error("Refusing official production domain without --confirm-production.")
-    report = audit(ProductionReader())
+    report = (baseline_audit(ProductionReader()) if args.mode == "baseline"
+              else audit(ProductionReader()))
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"Production GET audit: {report['status']}; {len(report['blockers'])} blockers. Report written.")
+    print(f"Production {args.mode} GET audit: {report['status']}; "
+          f"{len(report['blockers'])} blockers. Report written.")
     return 2 if report["status"] == "BLOQUEADOR" else 0
 
 

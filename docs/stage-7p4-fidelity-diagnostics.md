@@ -152,7 +152,40 @@ nao autoriza nem executa esse deploy.
 O baseline nao representa uma regressao causada por esta etapa. Ele audita o
 WordPress restaurado, anterior ao pacote, contra o estado final pretendido; por
 isso ainda lista header/footer nativos, metadados, hreflang e conteudo-alvo como
-pendentes. O preflight e o dry-run aceitam o novo fingerprint. Como o requisito
-literal da etapa esperava zero blockers tambem no baseline, esse ponto deve ser
-mantido visivel no proximo gate humano, sem converter o baseline artificialmente
-em aprovado.
+pendentes. O preflight e o dry-run aceitam o novo fingerprint.
+
+## Etapa 7P.4B - semantica do baseline
+
+Baseline nao e acceptance test. O baseline registra o estado anterior e separa
+duas classes de resultado:
+
+- `baseline_operational_safety`: pode bloquear o gate por HTTP/redirect critico,
+  AIOSEO ausente, Yoast presente, falha da politica de privacidade ou vazamento do
+  template LPV em busca, 404 e posts;
+- `baseline_target_differences`: registra como `EXPECTED_CHANGE` as diferencas
+  que o pacote aprovado existe para corrigir, sem declara-las `APROVADO` e sem
+  transforma-las em bloqueadores de autorizacao.
+
+O relatorio preserva tambem `post_deploy_acceptance`, com o resultado estrito e
+todos os blockers que seriam exigidos depois da publicacao. A funcao `audit()`
+continua sendo usada pelo executor no checkpoint pos-deploy e nao recebeu
+qualquer relaxamento. Somente o CLI executado com `--mode baseline` aplica a
+classificacao pre-deploy.
+
+O gate completo combina responsabilidades que nao dependem apenas do GET
+publico: preflight valida identidade e compatibilidade remota; o backup e o
+dry-run validam fingerprint, configuracao, plugins, maintenance mode e deploy
+shield residual. Uma diferenca contra o target nunca substitui essas protecoes.
+
+Resultados read-only da 7P.4B:
+
+- backup `20260925T125806Z`: `APROVADO`, 29 arquivos, fingerprint atual aceito
+  pelo dry-run;
+- preflight: package, remoto e sensitive-data `APROVADO`, zero network writes;
+- baseline operational safety: `APROVADO`, zero blockers;
+- baseline target differences: `EXPECTED_CHANGE`, 306 diferencas;
+- post-deploy acceptance preservado no mesmo relatorio: `BLOQUEADOR`, 306 checks
+  estritos ainda nao implantados;
+- dry-run: `APROVADO`, zero blockers, zero network writes e nenhum deploy shield
+  residual;
+- formularios enviados: zero.
