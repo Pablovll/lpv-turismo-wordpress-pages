@@ -5,18 +5,27 @@ import json
 from pathlib import Path
 
 if __package__:
+    from .audit_runtime_browser import browser_executable
+    from .backup_production import validate_backup
     from .preflight_staging import git, package_preflight, repository_scan
-    from .production_common import (EVIDENCE, ORIGIN, WP_ROOT, dump_json, inspect_remote,
-                                    load_pages, remote, wp)
+    from .production_common import (BACKUPS, EVIDENCE, ORIGIN, WP_ROOT, dump_json, inspect_remote,
+                                    litespeed_purge_timestamp, load_json, load_pages,
+                                    material_fingerprint, remote,
+                                    stable_litespeed_configuration, wp)
 else:
+    from audit_runtime_browser import browser_executable
+    from backup_production import validate_backup
     from preflight_staging import git, package_preflight, repository_scan
-    from production_common import (EVIDENCE, ORIGIN, WP_ROOT, dump_json, inspect_remote,
-                                   load_pages, remote, wp)
+    from production_common import (BACKUPS, EVIDENCE, ORIGIN, WP_ROOT, dump_json, inspect_remote,
+                                   litespeed_purge_timestamp, load_json, load_pages,
+                                   material_fingerprint, remote,
+                                   stable_litespeed_configuration, wp)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=EVIDENCE / "preflight-production.json")
+    parser.add_argument("--backup", type=Path)
     args = parser.parse_args()
     failures = []
     package = package_preflight()
@@ -46,6 +55,10 @@ def main():
             failures.append("aioseo_inactive")
         if plugins.get("litespeed-cache/litespeed-cache.php", {}).get("status") != "active":
             failures.append("litespeed_inactive")
+        if not stable_litespeed_configuration(state):
+            failures.append("litespeed_stable_configuration_missing")
+        if litespeed_purge_timestamp(state) is None:
+            failures.append("litespeed_purge_timestamp_invalid")
         if any("wordpress-seo" in name for name in plugins):
             failures.append("yoast_present")
         if not state.get("rest_aioseo_field"):
@@ -61,13 +74,47 @@ def main():
         shield = WP_ROOT + "/wp-content/mu-plugins/lpv-deploy-shield.php"
         if remote("test -e " + shield, check=False).returncode == 0:
             failures.append("residual_deploy_shield")
+        credentials = json.loads(wp([
+            "user", "application-password", "list", "1", "--fields=name",
+            "--format=json", "--no-color",
+        ]).stdout.decode("utf-8"))
+        if any(str(item.get("name", "")).startswith("LPV Codex Deploy ")
+               for item in credentials):
+            failures.append("residual_temporary_application_password")
+        if not browser_executable():
+            failures.append("chromium_runtime_unavailable")
+    backup = args.backup
+    if backup is None:
+        candidates = sorted(path for path in BACKUPS.glob("*") if path.is_dir())
+        backup = candidates[-1] if candidates else None
+    backup_validation = validate_backup(backup) if backup else {
+        "status": "BLOQUEADOR", "failures": ["backup_missing"]}
+    if backup_validation["status"] != "APROVADO":
+        failures.append("backup_invalid")
+    material_state = "NAO TESTADO"
+    if state and backup and backup_validation["status"] == "APROVADO":
+        saved = load_json(backup / "wordpress-state.json")
+        material_state = ("MATERIAL_STATE_UNCHANGED"
+                          if material_fingerprint(saved) == material_fingerprint(state)
+                          else "MATERIAL_STATE_CHANGED")
+        if material_state != "MATERIAL_STATE_UNCHANGED":
+            failures.append("production_changed_after_backup")
     report = {
         "git_status": git("status", "--short", "--branch").decode().splitlines(),
         "package": package, "sensitive_data": sensitive,
+        "backup": {"path": str(backup) if backup else None,
+                   "validation": backup_validation["status"],
+                   "material_fingerprint": material_state},
         "remote": {
             "status": "BLOQUEADOR" if failures else "APROVADO",
             "wordpress_root": WP_ROOT, "checks": len(load_pages()), "failures": failures,
             "versions": {key: state.get(key) for key in ("wordpress_version", "php_version", "theme_version")},
+            "litespeed": {
+                "stable_configuration_options": len(stable_litespeed_configuration(state)),
+                "stable_configuration_status": (
+                    "APROVADO" if stable_litespeed_configuration(state) else "BLOQUEADOR"),
+                "operational_timestamp_valid": litespeed_purge_timestamp(state) is not None,
+            },
         },
         "network_writes": 0,
     }

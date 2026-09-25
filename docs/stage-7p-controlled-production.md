@@ -1,5 +1,10 @@
 # Etapa 7P - Deploy controlado em producao
 
+Atualizacao de 25/09/2026: o aceite final usa a arquitetura A/B/C descrita em
+`docs/stage-7p5-final-deploy-architecture.md`. A auditoria publica normal nao
+compara mais hashes/tokens do JavaScript transformado pelo LiteSpeed. Fonte
+armazenada, render `before_optm` e execucao real no Chromium sao gates separados.
+
 Data de preparacao: 23/09/2026. Branch: `codex/lpv-language-seo`.
 Este documento registra o fluxo automatizado e reversivel para o WordPress
 oficial. Nao contem credenciais, chaves, senhas, dumps ou dados pessoais.

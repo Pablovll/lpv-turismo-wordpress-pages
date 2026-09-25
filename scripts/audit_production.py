@@ -3,20 +3,23 @@
 import argparse
 import copy
 import json
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote, urlencode, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, quote, urlencode, urlsplit, urlunsplit
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
 from bs4 import BeautifulSoup
 
 if __package__:
     from .content_fidelity import (compare_rendered_content, compare_rendered_images,
-                                   compare_stored_content)
+                                   compare_script_sources, compare_stored_content,
+                                   optimized_script_delivery)
 else:
     from content_fidelity import (compare_rendered_content, compare_rendered_images,
-                                  compare_stored_content)
+                                  compare_script_sources, compare_stored_content,
+                                  optimized_script_delivery)
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "publication/stage-6"
@@ -33,30 +36,49 @@ class NoRedirects(HTTPRedirectHandler):
 
 
 class ProductionReader:
-    def __init__(self):
+    def __init__(self, extra_headers=None):
         self.opener = build_opener(ProxyHandler({}), NoRedirects())
+        self.extra_headers = dict(extra_headers or {})
         self.image_probes = {}
+        self.transport_error_count = 0
+        self.transport_errors = []
 
     def get(self, path):
         if not path.startswith("/") or path.startswith("//"):
             raise ValueError("Production audit accepts root-relative paths only.")
-        request = Request(ORIGIN + path, headers={
+        headers = {
             "User-Agent": "LPV-Production-ReadOnly-Audit/1.0",
             "Accept": "text/html,application/json;q=0.9",
-        }, method="GET")
-        try:
+        }
+        headers.update(self.extra_headers)
+        request = Request(ORIGIN + path, headers=headers, method="GET")
+        for attempt in range(1, 4):
             try:
-                response = self.opener.open(request, timeout=30)
-            except HTTPError as error:
-                response = error
-            with response:
-                body = response.read(MAX_BYTES + 1)
-                if len(body) > MAX_BYTES:
-                    return {"status": 0, "url": response.url, "error": "response_size_limit"}
-                return {"status": response.status, "url": response.url,
-                        "body": body.decode("utf-8"), "headers": dict(response.headers.items())}
-        except (URLError, TimeoutError, OSError, UnicodeError):
-            return {"status": 0, "error": "request_failed_no_sensitive_details_logged"}
+                try:
+                    response = self.opener.open(request, timeout=30)
+                except HTTPError as error:
+                    response = error
+                with response:
+                    body = response.read(MAX_BYTES + 1)
+                    if len(body) > MAX_BYTES:
+                        return {"status": 0, "url": response.url, "error": "response_size_limit"}
+                    return {"status": response.status, "url": response.url,
+                            "body": body.decode("utf-8"), "headers": dict(response.headers.items()),
+                            "transport_attempts": attempt}
+            except (URLError, TimeoutError, OSError, UnicodeError) as error:
+                self.transport_error_count += 1
+                self.transport_errors.append({
+                    "path": urlsplit(path)._replace(query="").geturl(),
+                    "attempt": attempt,
+                    "type": type(error).__name__,
+                })
+                if attempt < 3:
+                    time.sleep(0.25 * attempt)
+        return {"status": 0, "error": "request_failed_after_3_attempts",
+                "transport_attempts": 3}
+
+    def get_preoptimization(self, path):
+        return self.get(before_optimization_path(path))
 
     def probe_image(self, url):
         if url in self.image_probes:
@@ -120,6 +142,14 @@ def sanitized_resource_url(url):
     return urlunsplit((parsed.scheme, host + port, parsed.path, "", ""))
 
 
+def before_optimization_path(path):
+    parsed = urlsplit(path)
+    query = [(key, value) for key, value in parse_qsl(parsed.query, keep_blank_values=True)
+             if key != "LSCWP_CTRL"]
+    query.append(("LSCWP_CTRL", "before_optm"))
+    return urlunsplit(("", "", parsed.path or "/", urlencode(query), ""))
+
+
 def normalized_probe_result(url, result):
     if isinstance(result, int):
         return {"url": sanitized_resource_url(url), "http_status": result,
@@ -140,7 +170,8 @@ def state(condition):
     return "APROVADO" if condition else "BLOQUEADOR"
 
 
-def inspect_page(row, metadata, response, stored_page=None, image_probe=None):
+def inspect_page(row, metadata, response, stored_page=None, image_probe=None,
+                 preoptimization_response=None):
     soup = BeautifulSoup(response.get("body", ""), "html.parser")
     checks = {
         "http_200": state(response.get("status") == 200),
@@ -183,6 +214,8 @@ def inspect_page(row, metadata, response, stored_page=None, image_probe=None):
         state(stored["content_preserved"]) if stored is not None else "NAO TESTADO")
     checks["stored_image_urls_preserved"] = (
         state(stored["image_urls_preserved"]) if stored is not None else "NAO TESTADO")
+    checks["stored_script_source_preserved"] = (
+        state(stored["script_source_preserved"]) if stored is not None else "NAO TESTADO")
 
     rendered_content = {"preserved": False, "failures": ["content_container"],
                         "expected": {}, "observed": {}, "diagnostics": {}}
@@ -191,9 +224,13 @@ def inspect_page(row, metadata, response, stored_page=None, image_probe=None):
                        "observed_primary_count": 0, "primary_http_urls": [],
                        "derived_http_urls": [], "probe_targets": []}
     if len(containers) == 1:
-        rendered_content = compare_rendered_content(approved, containers[0])
+        rendered_content = compare_rendered_content(approved, containers[0], strict_scripts=False)
         rendered_images = compare_rendered_images(approved, containers[0])
+    normal_scripts = (compare_script_sources(approved, containers[0]) if len(containers) == 1
+                      else {"preserved": False, "diagnostics": [], "expected_count": 0,
+                            "observed_count": 0})
     checks["rendered_content_preserved"] = state(rendered_content["preserved"])
+    checks["normal_public_scripts_preserved"] = state(normal_scripts["preserved"])
     checks["rendered_primary_image_urls_preserved"] = state(rendered_images["primary_preserved"])
     probe_results = []
     if image_probe:
@@ -208,6 +245,24 @@ def inspect_page(row, metadata, response, stored_page=None, image_probe=None):
             probe_results.append({"page_id": row["id"], **target, **result})
     reachable = all(result["reachable"] for result in probe_results)
     checks["derived_image_urls_valid"] = state(rendered_images["derived_valid"] and reachable)
+    optimized_delivery = optimized_script_delivery(
+        approved, containers[0] if len(containers) == 1 else "")
+    checks["optimized_script_delivery_detected"] = (
+        "DETECTADO" if optimized_delivery["detected"] else "NAO DETECTADO")
+
+    preoptimization_response = preoptimization_response or response
+    preoptimization_soup = BeautifulSoup(preoptimization_response.get("body", ""), "html.parser")
+    preoptimization_containers = preoptimization_soup.select(".wp-block-post-content")
+    preoptimization_content = {"preserved": False, "failures": ["content_container"]}
+    preoptimization_scripts = {"preserved": False, "diagnostics": [],
+                               "expected_count": 0, "observed_count": 0}
+    if preoptimization_response.get("status") == 200 and len(preoptimization_containers) == 1:
+        preoptimization_content = compare_rendered_content(
+            approved, preoptimization_containers[0], strict_scripts=False)
+        preoptimization_scripts = compare_script_sources(approved, preoptimization_containers[0])
+    checks["preoptimization_rendered_content_preserved"] = state(
+        preoptimization_content["preserved"])
+    checks["preoptimization_scripts_preserved"] = state(preoptimization_scripts["preserved"])
     body = response.get("body", "").lower()
     checks["aioseo_present"] = state("all in one seo" in body or "aioseo" in body)
     checks["yoast_absent"] = state("yoast" not in body)
@@ -227,6 +282,12 @@ def inspect_page(row, metadata, response, stored_page=None, image_probe=None):
                 "image_probe_count": len(probe_results),
                 "failed_image_probe_count": sum(not result["reachable"] for result in probe_results),
                 "failed_image_probes": [result for result in probe_results if not result["reachable"]],
+                "stored_script_source": stored.get("scripts", {}) if stored is not None else {},
+                "optimized_script_delivery": optimized_delivery,
+                "normal_public_script_diagnostics": normal_scripts.get("diagnostics", []),
+                "preoptimization_http_status": preoptimization_response.get("status"),
+                "preoptimization_content_failures": preoptimization_content.get("failures", []),
+                "preoptimization_script_diagnostics": preoptimization_scripts.get("diagnostics", []),
             }}
 
 
@@ -238,13 +299,44 @@ def inspect_non_lpv(response, expected_status=200):
             "no_lpv_experiences_wrapper": state(not soup.select(".lp-experiences-page"))}
 
 
+def audit_stored_source(stored_pages):
+    pages = []
+    blockers = []
+    rows = json.loads((PACKAGE / "language-map.json").read_bytes())["pages"]
+    for row in rows:
+        approved = (PACKAGE / "html" / row["source"].removeprefix("pages/")).read_text(
+            encoding="utf-8")
+        stored_page = (stored_pages or {}).get(str(row["id"]), {})
+        comparison = compare_stored_content(approved, stored_page.get("content", ""))
+        checks = {
+            "stored_content_preserved": state(
+                bool(stored_page.get("exists")) and comparison["content_preserved"]),
+            "stored_image_urls_preserved": state(
+                bool(stored_page.get("exists")) and comparison["image_urls_preserved"]),
+            "stored_script_source_preserved": state(
+                bool(stored_page.get("exists")) and comparison["script_source_preserved"]),
+        }
+        pages.append({"id": row["id"], "path": row["url"], "checks": checks,
+                      "script_diagnostics": comparison["scripts"].get("diagnostics", [])})
+        blockers.extend(f"page:{row['id']}:{key}" for key, value in checks.items()
+                        if value == "BLOQUEADOR")
+    return {"pages": pages, "blockers": blockers,
+            "status": "APROVADO" if not blockers else "BLOQUEADOR"}
+
+
 def audit(reader, stored_pages=None):
     rows = json.loads((PACKAGE / "language-map.json").read_bytes())["pages"]
     metadata = {row["id"]: row for row in json.loads((PACKAGE / "aioseo-metadata.json").read_bytes())}
-    pages = [inspect_page(
-        row, metadata[row["id"]], reader.get(row["url"]),
-        (stored_pages or {}).get(str(row["id"])), getattr(reader, "probe_image", None),
-    ) for row in rows]
+    pages = []
+    for row in rows:
+        response = reader.get(row["url"])
+        preoptimization = (reader.get_preoptimization(row["url"])
+                           if hasattr(reader, "get_preoptimization") else response)
+        pages.append(inspect_page(
+            row, metadata[row["id"]], response,
+            (stored_pages or {}).get(str(row["id"])), getattr(reader, "probe_image", None),
+            preoptimization,
+        ))
     privacy_response = reader.get("/politica-de-privacidade/")
     privacy_soup = BeautifulSoup(privacy_response.get("body", ""), "html.parser")
     privacy = {"http_200": state(privacy_response.get("status") == 200),
@@ -274,10 +366,13 @@ def audit(reader, stored_pages=None):
     if isinstance(post, dict) and post.get("status") != "NAO TESTADO":
         blockers.extend(f"post:{key}" for key, value in post.items() if value == "BLOQUEADOR")
     return {"checked_at_utc": datetime.now(timezone.utc).isoformat(),
-            "origin": ORIGIN, "method": "Unauthenticated public GET only; redirects disabled; no JS/forms/login",
+            "origin": ORIGIN,
+            "method": "Public GET plus LiteSpeed before_optm fidelity GET; redirects disabled; no forms/login",
             "pages": pages, "privacy": privacy, "search": search, "not_found": not_found, "sample_post": post,
             "blockers": blockers, "status": "APROVADO" if not blockers else "BLOQUEADOR",
-            "forms_sent": 0, "ga_debugview": "NAO TESTADO", "zoom_200": "NAO TESTADO"}
+            "forms_sent": 0, "ga_debugview": "NAO TESTADO", "zoom_200": "NAO TESTADO",
+            "transport_error_count": getattr(reader, "transport_error_count", 0),
+            "transport_errors": getattr(reader, "transport_errors", [])}
 
 
 def classify_baseline(strict_report):

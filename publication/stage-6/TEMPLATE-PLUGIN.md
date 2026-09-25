@@ -25,6 +25,18 @@ Isso impede a insercao de tags `<p>`/`<br>` dentro dos blocos `script` e `style`
 `wptexturize`, blocos, shortcodes e todos os filtros de paginas fora do mapa
 permanecem ativos.
 
+Ainda na versao 1.0.1, o filtro oficial `litespeed_can_optm` retorna `false`
+somente quando ID, permalink, caminho solicitado, tipo de pagina, homepage e
+tema correspondem ao mapa aprovado. Isso desativa Page Optimization para essas
+22 respostas, evitando minify/combine/defer do JavaScript LPV. O plugin
+LiteSpeed, page cache, purge e configuracoes globais permanecem ativos.
+
+Query strings nao participam do match; trailing slash segue a forma canonica do
+WordPress. Separadores percent-encoded, caminhos parecidos, subpaths e IDs nao
+mapeados nunca sao convertidos em uma rota aprovada. Admin, login, REST, AJAX,
+cron, feed, embed, preview, busca, 404, posts, Politica de Privacidade e outras
+paginas preservam o comportamento recebido do LiteSpeed.
+
 A selecao exige ID E caminho. Aceita outro dominio de staging com a mesma
 estrutura na raiz, mas nao IDs novos, caminhos alterados ou instalacao em
 subdiretorio. Falhas de correspondencia deixam o template anterior atuar;
@@ -69,9 +81,19 @@ layout; feed/embed/painel e paginas fora do mapa nao sao selecionados.
   Em staging de outro dominio/noindex global, nao emitir hreflang e esperado.
 - Site Kit: hooks nativos preservados. Nao adicionar segundo snippet de GA;
   proteger staging de envio de eventos reais. Validar manualmente depois.
-- LiteSpeed/CDN: caches antigos podem continuar servindo o template anterior.
-  Limpar apos a aplicacao e apos rollback. Nao usar minificacao como correcao
-  de markup nem alterar opcoes de otimizacao sem comparacao controlada.
+- LiteSpeed/CDN: Page Optimization e desativado pela API oficial somente nas 22
+  paginas LPV. Page cache e o plugin continuam ativos. Caches antigos podem
+  continuar servindo a entrega anterior; limpar apos aplicacao e rollback. Nao
+  editar configuracoes globais, `.htaccess` ou arquivos do LiteSpeed.
+
+## Changelog
+
+### 1.0.1 - 2026-09-25
+
+- protege scripts e estilos aprovados contra `wpautop` nas 22 paginas LPV;
+- integra compatibilidade oficial com LiteSpeed;
+- desativa Page Optimization somente na allowlist exata das 22 paginas;
+- preserva cache/plugin LiteSpeed e nao altera conteudo editorial.
 
 ## Rollback
 

@@ -41,6 +41,7 @@ foreach ( $lpv_pages as $id => $expected_path ) {
 		'exists'          => true,
 		'post_type'       => $post->post_type,
 		'post_name'       => $post->post_name,
+		'post_parent'     => (int) $post->post_parent,
 		'post_status'     => $post->post_status,
 		'post_password'   => '' === $post->post_password ? '' : '[present]',
 		'post_modified_gmt' => $post->post_modified_gmt,
@@ -76,11 +77,36 @@ foreach ( get_posts( array( 'post_type' => 'wp_template', 'post_status' => 'any'
 
 $stylesheet = get_stylesheet();
 $aioseo_option_hashes = array();
-foreach ( wp_load_alloptions() as $name => $value ) {
+$litespeed_option_hashes = array();
+$litespeed_stable_configuration = array();
+$litespeed_operational_state = array();
+$litespeed_operational_options = array( 'litespeed.optimize.timestamp_purge_css' );
+global $wpdb;
+$option_names = $wpdb->get_col(
+	"SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'aioseo%' OR option_name LIKE 'litespeed%'"
+);
+foreach ( $option_names as $name ) {
+	$value = get_option( $name );
 	if ( 0 === strpos( $name, 'aioseo' ) ) {
 		$aioseo_option_hashes[ $name ] = hash( 'sha256', maybe_serialize( $value ) );
 	}
+	if ( 0 === strpos( $name, 'litespeed' ) ) {
+		$value_hash = hash( 'sha256', maybe_serialize( $value ) );
+		$litespeed_option_hashes[ $name ] = $value_hash;
+		if ( in_array( $name, $litespeed_operational_options, true ) ) {
+			$litespeed_operational_state[ $name ] = array(
+				'value' => is_scalar( $value ) ? (string) $value : '',
+				'sha256' => $value_hash,
+			);
+		} else {
+			$litespeed_stable_configuration[ $name ] = $value_hash;
+		}
+	}
 }
+ksort( $aioseo_option_hashes );
+ksort( $litespeed_option_hashes );
+ksort( $litespeed_stable_configuration );
+ksort( $litespeed_operational_state );
 
 $theme = wp_get_theme();
 $admin = get_user_by( 'id', 1 );
@@ -100,6 +126,9 @@ $result = array(
 	'custom_css_sha256' => hash( 'sha256', wp_get_custom_css( $stylesheet ) ),
 	'pages' => $pages, 'plugins' => $plugins, 'wp_templates' => $templates,
 	'aioseo_option_hashes' => $aioseo_option_hashes,
+	'litespeed_option_hashes' => $litespeed_option_hashes,
+	'litespeed_stable_configuration' => $litespeed_stable_configuration,
+	'litespeed_operational_state' => $litespeed_operational_state,
 	'rest_aioseo_field' => isset( $GLOBALS['wp_rest_additional_fields']['page']['aioseo_meta_data'] ),
 );
 

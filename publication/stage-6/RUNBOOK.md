@@ -1,6 +1,6 @@
 # Etapa 6 - Integracao WordPress e staging
 
-Versao 1.0.0. Referencia: 22/09/2026. Entrega local para revisao e aplicacao
+Versao 1.0.1. Referencia: 25/09/2026. Entrega local para revisao e aplicacao
 manual em staging. Nao e deploy nem autorizacao para publicar automaticamente.
 Este runbook substitui a criacao/atribuicao manual de templates da Etapa 4.
 
@@ -49,6 +49,14 @@ nao recebe entradas HTTP, nao grava no banco e nao faz chamadas externas.
 Nao possui renderer de documento proprio nem adiciona SEO, CSS ou scripts.
 O canvas do WordPress preserva `language_attributes`, `wp_head`,
 `wp_body_open` e `wp_footer`.
+
+Na versao 1.0.1, o mesmo allowlist de ID e caminho aplica o filtro oficial
+`litespeed_can_optm=false` somente a essas 22 requisicoes frontend. Isso evita
+a transformacao de JavaScript que falhou no runtime, sem desativar o plugin,
+o page cache ou o comando de purge. Admin, login, REST, AJAX, cron, feeds,
+preview, busca, 404, posts, politica e paginas nao mapeadas preservam o valor
+original recebido pelo filtro. Nenhuma configuracao global do LiteSpeed e
+gravada pelo plugin.
 
 Foi preferido ao tema filho para nao trocar o tema ativo nem mudar a associacao
 de CSS adicional/estilos globais ao tema. Twenty Twenty-Five e seus arquivos
@@ -168,6 +176,14 @@ controlada; nao deixar templates novos ativos com conteudos antigos em producao.
    de producao; nao promover automaticamente o clone inteiro ou este pacote.
 
 ### LiteSpeed Cache
+
+As 22 paginas LPV recusam intencionalmente apenas **Page Optimization** pela
+API publica do LiteSpeed. O page cache continua ativo; HIT/MISS e registrado
+apos duas leituras, sem exigir HIT 22/22 porque o header depende das regras e
+do estado de aquecimento. O aceite compara os scripts da resposta publica
+normal com a fonte aprovada, confirma o plugin ativo, o purge funcional e a
+configuracao estavel LiteSpeed inalterada. A unica option operacional separada
+e `litespeed.optimize.timestamp_purge_css`, validada contra a janela do purge.
 
 Em LiteSpeed Cache > Toolbox/Ferramentas > Purge/Limpar, usar **Purge All**
 apos a rodada. Se CSS/JS otimizado, Critical CSS ou Unique CSS permanecerem

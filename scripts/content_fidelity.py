@@ -149,6 +149,67 @@ def script_signature(node):
             script_relevant_attributes(node), code_tokens(node.get_text()))
 
 
+def normalize_script_source(value):
+    """Canonicalize only encoding artifacts that do not change JavaScript source."""
+    return str(value).replace("\r\n", "\n").replace("\r", "\n").lstrip("\ufeff")
+
+
+def stored_script_record(node, index):
+    source = canonical_script_src(node)
+    code = normalize_script_source(node.get_text())
+    canonical = json_script_record(source, code)
+    return {
+        "index": index,
+        "src": source,
+        "code_length": len(code),
+        "canonical_sha256": sha256_text(canonical),
+    }
+
+
+def json_script_record(source, code):
+    # A length-prefixed representation avoids delimiter ambiguity without rewriting source.
+    return f"src:{len(source)}:{source}\ncode:{len(code)}:{code}"
+
+
+def stored_script_manifest(value):
+    soup = parse_fragment(value)
+    return tuple(
+        (canonical_script_src(node), normalize_script_source(node.get_text()))
+        for node in soup.select("script")
+    )
+
+
+def compare_script_sources(approved, observed):
+    expected_soup = parse_fragment(approved)
+    observed_soup = parse_fragment(observed)
+    expected_nodes = expected_soup.select("script")
+    observed_nodes = observed_soup.select("script")
+    expected = stored_script_manifest(expected_soup)
+    actual = stored_script_manifest(observed_soup)
+    records = []
+    for index in range(max(len(expected_nodes), len(observed_nodes))):
+        left = expected_nodes[index] if index < len(expected_nodes) else None
+        right = observed_nodes[index] if index < len(observed_nodes) else None
+        records.append({
+            "index": index,
+            "equivalent": (
+                left is not None and right is not None
+                and stored_script_record(left, index)["canonical_sha256"]
+                == stored_script_record(right, index)["canonical_sha256"]
+            ),
+            "expected": stored_script_record(left, index) if left is not None
+            else {"index": index, "presence": False},
+            "observed": stored_script_record(right, index) if right is not None
+            else {"index": index, "presence": False},
+        })
+    return {
+        "preserved": expected == actual,
+        "expected_count": len(expected),
+        "observed_count": len(actual),
+        "diagnostics": [item for item in records if not item["equivalent"]],
+    }
+
+
 def script_record(node, index):
     if node is None:
         return {"index": index, "presence": False}
@@ -298,14 +359,39 @@ def content_manifest(value):
     }
 
 
-def compare_rendered_content(approved, rendered):
+def optimized_script_delivery(approved, rendered):
+    expected = parse_fragment(approved).select("script")
+    observed = parse_fragment(rendered).select("script")
+    recognized = []
+    for index, node in enumerate(observed):
+        source = canonical_script_src(node)
+        recognized.append({
+            "index": index,
+            "delivery": (
+                "litespeed" if node.get("type", "").strip().lower() == "litespeed/javascript"
+                else "external" if source else "inline"
+            ),
+            "has_src": bool(source),
+            "has_code": bool(node.get_text().strip()),
+        })
+    return {
+        "detected": not expected or bool(observed),
+        "expected_count": len(expected),
+        "observed_count": len(observed),
+        "records": recognized,
+    }
+
+
+def compare_rendered_content(approved, rendered, *, strict_scripts=True):
     expected_soup = parse_fragment(approved)
     actual_soup = parse_fragment(rendered)
     expected = content_manifest(expected_soup)
     actual = content_manifest(actual_soup)
     failures = []
-    for key in ("text", "headings", "links", "buttons", "ids", "structure",
-                "forms", "scripts", "styles"):
+    keys = ["text", "headings", "links", "buttons", "ids", "structure", "forms", "styles"]
+    if strict_scripts:
+        keys.append("scripts")
+    for key in keys:
         if expected[key] != actual[key]:
             failures.append(key)
     if expected["classes"] - actual["classes"]:
@@ -379,9 +465,12 @@ def editorial_image_urls(value, rendered=False):
 
 
 def compare_stored_content(approved, stored):
+    scripts = compare_script_sources(approved, stored)
     return {
         "content_preserved": approved == stored,
         "image_urls_preserved": editorial_image_urls(approved) == editorial_image_urls(stored),
+        "script_source_preserved": scripts["preserved"],
+        "scripts": scripts,
     }
 
 

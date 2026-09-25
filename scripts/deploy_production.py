@@ -22,19 +22,25 @@ from urllib.parse import urlencode
 from urllib.request import ProxyHandler, Request, build_opener
 
 if __package__:
-    from .audit_production import NoRedirects, ProductionReader, audit
+    from .audit_production import NoRedirects, ProductionReader, audit, audit_stored_source
+    from .audit_runtime_browser import audit_runtime, browser_executable
     from .backup_production import validate_backup
     from .preflight_staging import package_preflight
     from .production_common import (BACKUPS, EVIDENCE, ORIGIN, PACKAGE, ROOT, SSH_ALIAS,
                                     WP_ROOT, approved_content, dump_json, inspect_remote,
-                                    load_json, load_metadata, load_pages, remote, sha256_bytes, wp)
+                                    litespeed_purge_timestamp, load_json, load_metadata, load_pages,
+                                    material_fingerprint as common_material_fingerprint,
+                                    remote, sha256_bytes, stable_litespeed_configuration, wp)
 else:
-    from audit_production import NoRedirects, ProductionReader, audit
+    from audit_production import NoRedirects, ProductionReader, audit, audit_stored_source
+    from audit_runtime_browser import audit_runtime, browser_executable
     from backup_production import validate_backup
     from preflight_staging import package_preflight
     from production_common import (BACKUPS, EVIDENCE, ORIGIN, PACKAGE, ROOT, SSH_ALIAS,
                                    WP_ROOT, approved_content, dump_json, inspect_remote,
-                                   load_json, load_metadata, load_pages, remote, sha256_bytes, wp)
+                                   litespeed_purge_timestamp, load_json, load_metadata, load_pages,
+                                   material_fingerprint as common_material_fingerprint,
+                                   remote, sha256_bytes, stable_litespeed_configuration, wp)
 
 AUTHORIZATION = "DEPLOY LPV PRODUCAO"
 RESULT_PREFIX = "LPV_RESULT:"
@@ -89,6 +95,12 @@ class HelperProtocolError(RuntimeError):
         super().__init__(message)
 
 
+class HTTPVerificationError(RuntimeError):
+    def __init__(self, message, transport_error_count):
+        self.transport_error_count = transport_error_count
+        super().__init__(message)
+
+
 def sanitize_error_text(value):
     text = str(value)
     text = re.sub(r"(?i)(authorization|password|secret|token)(\s*[:=]\s*)\S+", r"\1\2[redacted]", text)
@@ -104,7 +116,8 @@ def exception_record(error):
         "exit_code": getattr(error, "returncode", None),
         "traceback": sanitize_error_text("".join(traceback.format_exception(error))),
     }
-    for name in ("stdout_bytes", "stderr_bytes", "stdout_sha256", "stderr_sha256"):
+    for name in ("stdout_bytes", "stderr_bytes", "stdout_sha256", "stderr_sha256",
+                 "transport_error_count"):
         if hasattr(error, name):
             record[name] = getattr(error, name)
     return record
@@ -167,7 +180,7 @@ def package_hash():
 def deployment_code_hash():
     files = [ROOT / "scripts/deploy_production.py", ROOT / "scripts/production_common.py",
              ROOT / "scripts/audit_production.py", ROOT / "scripts/content_fidelity.py",
-             ROOT / "scripts/backup_production.py"]
+             ROOT / "scripts/backup_production.py", ROOT / "scripts/audit_runtime_browser.py"]
     files.extend(sorted((ROOT / "wordpress/deploy").glob("*.php")))
     return sha256_bytes(b"".join(path.relative_to(ROOT).as_posix().encode() + b"\0" + path.read_bytes()
                                  for path in files))
@@ -187,19 +200,19 @@ def state_identity_failures(state):
     return failures
 
 
+def material_fingerprint(state):
+    return common_material_fingerprint(state)
+
+
 def critical_fingerprint(state):
-    return {
-        "home": state.get("home"), "siteurl": state.get("siteurl"),
-        "template": state.get("template"), "stylesheet": state.get("stylesheet"),
-        "options": state.get("options"), "custom_css_sha256": state.get("custom_css_sha256"),
-        "pages": {key: {
-            "path": value.get("path"), "post_type": value.get("post_type"),
-            "post_status": value.get("post_status"), "content_sha256": value.get("content_sha256"),
-            "post_modified_gmt": value.get("post_modified_gmt"), "aioseo": value.get("aioseo"),
-        } for key, value in state.get("pages", {}).items()},
-        "plugins": state.get("plugins"), "wp_templates": state.get("wp_templates"),
-        "aioseo_option_hashes": state.get("aioseo_option_hashes"),
-    }
+    """Backward-compatible name for the material, timestamp-independent fingerprint."""
+    return material_fingerprint(state)
+
+
+def informational_timestamp_changes(before, after):
+    return [int(page_id) for page_id, page in before.get("pages", {}).items()
+            if page.get("post_modified_gmt")
+            != after.get("pages", {}).get(page_id, {}).get("post_modified_gmt")]
 
 
 def render_deploy_shield(token, now=None):
@@ -264,6 +277,82 @@ def litespeed_cli_check():
     }
 
 
+def response_header(response, name):
+    expected = name.lower()
+    for key, value in response.get("headers", {}).items():
+        if key.lower() == expected:
+            return str(value).strip().lower()
+    return ""
+
+
+def verify_litespeed_page_cache(reader=None):
+    """Record cache behavior without treating an isolated missing HIT as a blocker."""
+    reader = reader or ProductionReader()
+    pages = []
+    blockers = []
+    for row in load_pages():
+        attempts = []
+        for _attempt in range(2):
+            response = reader.get(row["url"])
+            cache = response_header(response, "X-LiteSpeed-Cache")
+            attempts.append({"http_status": response.get("status"), "cache": cache})
+            if response.get("status") == 200 and "hit" in cache.split(","):
+                break
+        http_ok = all(item["http_status"] == 200 for item in attempts)
+        hit_observed = any("hit" in item["cache"].split(",") for item in attempts)
+        pages.append({"id": row["id"], "path": row["url"], "attempts": attempts,
+                      "http_ok": http_ok, "cache_hit_observed": hit_observed})
+        if not http_ok:
+            blockers.append(f"page:{row['id']}:cache_probe_http_200")
+    return {"status": "APROVADO" if not blockers else "BLOQUEADOR",
+            "pages": pages, "blockers": blockers,
+            "cache_hit_count": sum(page["cache_hit_observed"] for page in pages),
+            "cache_hit_required": False,
+            "page_optimization_bypass_scope": 22,
+            "global_settings_changed": False}
+
+
+def validate_litespeed_purge(before, after, purge_started_at, purge_completed_at,
+                             read_completed_at):
+    stable_before = stable_litespeed_configuration(before)
+    stable_after = stable_litespeed_configuration(after)
+    changed_stable = sorted(name for name in set(stable_before) | set(stable_after)
+                            if stable_before.get(name) != stable_after.get(name))
+    before_timestamp = litespeed_purge_timestamp(before)
+    after_timestamp = litespeed_purge_timestamp(after)
+    start_epoch = int(purge_started_at.timestamp())
+    completed_epoch = int(purge_completed_at.timestamp())
+    read_epoch = int(read_completed_at.timestamp())
+    blockers = []
+    if changed_stable:
+        blockers.extend("stable_configuration:" + name for name in changed_stable)
+    if before_timestamp is None or after_timestamp is None:
+        blockers.append("timestamp_purge_css:invalid_format")
+    elif after_timestamp > read_epoch + 300:
+        blockers.append("timestamp_purge_css:future_value")
+    elif after_timestamp < 0:
+        blockers.append("timestamp_purge_css:negative_value")
+    changed = (before_timestamp is not None and after_timestamp is not None
+               and before_timestamp != after_timestamp)
+    if changed and not (start_epoch - 5 <= after_timestamp <= read_epoch + 300):
+        blockers.append("timestamp_purge_css:outside_purge_window")
+    classification = ("EXPECTED_OPERATIONAL_CHANGE" if changed
+                      else "UNCHANGED_DIAGNOSTIC")
+    return {
+        "status": "APROVADO" if not blockers else "BLOQUEADOR",
+        "stable_configuration_unchanged": not changed_stable,
+        "stable_configuration_changed_options": changed_stable,
+        "timestamp_before": before_timestamp,
+        "timestamp_after": after_timestamp,
+        "timestamp_classification": classification,
+        "purge_started_at_utc": purge_started_at.isoformat(),
+        "purge_completed_at_utc": purge_completed_at.isoformat(),
+        "read_completed_at_utc": read_completed_at.isoformat(),
+        "purge_duration_seconds": max(0, completed_epoch - start_epoch),
+        "blockers": blockers,
+    }
+
+
 def deactivate_native_maintenance_if_needed():
     active = wp(["maintenance-mode", "is-active", "--no-color"], check=False).returncode == 0
     if not active:
@@ -273,6 +362,13 @@ def deactivate_native_maintenance_if_needed():
     if still_active:
         raise RuntimeError("Residual native WordPress maintenance mode could not be deactivated.")
     return {"deactivated": True, "already_off": False}
+
+
+def temporary_application_password_count():
+    result = wp(["user", "application-password", "list", "1", "--fields=name",
+                 "--format=json", "--no-color"])
+    records = json.loads(result.stdout.decode("utf-8"))
+    return sum(str(item.get("name", "")).startswith("LPV Codex Deploy ") for item in records)
 
 
 def dry_run(backup):
@@ -297,6 +393,9 @@ def dry_run(backup):
     if any("wordpress-seo" in name for name in plugins): failures.append("yoast_present")
     native_maintenance = wp(["maintenance-mode", "is-active", "--no-color"], check=False).returncode == 0
     if native_maintenance: failures.append("native_maintenance_active")
+    temporary_credentials = temporary_application_password_count()
+    if temporary_credentials: failures.append("residual_temporary_application_password")
+    if not browser_executable(): failures.append("chromium_runtime_unavailable")
     residual_shield = deploy_shield_exists()
     if residual_shield: failures.append("residual_deploy_shield")
     if any(template.get("slug") == "lpv-content-only" for template in current.get("wp_templates", [])):
@@ -350,6 +449,11 @@ def dry_run(backup):
                      "theme": current.get("theme_version"), "aioseo": aioseo.get("version"),
                      "litespeed": litespeed.get("version")},
         "page_count": 22, "content_changes": content_changes,
+        "material_fingerprint": (
+            "MATERIAL_STATE_UNCHANGED" if critical_fingerprint(current)
+            == critical_fingerprint(backup_state) else "MATERIAL_STATE_CHANGED"),
+        "informational_post_modified_gmt_changes": informational_timestamp_changes(
+            backup_state, current),
         "content_change_count": len(content_changes),
         "css_change": current["custom_css_sha256"] != sha256_bytes(target_css),
         "current_css_sha256": current["custom_css_sha256"], "target_css_sha256": sha256_bytes(target_css),
@@ -363,18 +467,37 @@ def dry_run(backup):
         },
         "plugin_package_matches": plugin_package_matches,
         "plugin_actions": plugin_actions,
-        "fidelity_criteria": ["stored_content_preserved", "rendered_content_preserved",
+        "fidelity_criteria": ["stored_content_preserved", "stored_script_source_preserved",
+                              "normal_public_scripts_preserved",
+                              "preoptimization_rendered_content_preserved",
+                              "preoptimization_scripts_preserved", "browser_runtime_acceptance",
+                              "rendered_content_preserved",
                               "stored_image_urls_preserved",
                               "rendered_primary_image_urls_preserved",
                               "derived_image_urls_valid"],
         "litespeed_purge": litespeed_cli,
+        "litespeed_page_optimization": {
+            "bypass_scope": "exactly_22_approved_pages",
+            "global_settings_change": False,
+            "page_cache_verification_planned": True,
+            "non_lpv_routes_unchanged": True,
+            "stable_configuration_options": len(stable_litespeed_configuration(current)),
+            "operational_timestamp": "litespeed.optimize.timestamp_purge_css",
+            "expected_operational_mutation": True,
+        },
         "native_maintenance_active": native_maintenance,
         "residual_deploy_shield": residual_shield,
+        "residual_temporary_application_passwords": temporary_credentials,
+        "browser_runtime": {"planned": True, "executable_available": bool(browser_executable()),
+                            "normal_optimized_urls": True, "network_side_effects_blocked": True},
         "planned_checkpoints": ["application_password", "deploy_shield", "shield_frontend_503",
                                 "shield_public_rest_503", "shield_authorized_rest", "template_plugin",
                                 "language_plugin", "css", "22_page_contents", "aioseo_rest",
                                 "en_status", "litespeed_cache", "deploy_shield_removed",
-                                "homepage_200", "stored_content_audit", "public_rendered_audit",
+                                "homepage_200", "stored_source_audit", "public_rendered_audit",
+                                "preoptimization_rendered_audit", "browser_runtime_acceptance",
+                                "litespeed_global_settings_unchanged",
+                                "litespeed_page_cache_22", "read_only_warmup_audit",
                                 "application_password_revoked"],
         "rollback": {"journaled": True, "idempotent": True, "aioseo_empty_is_not_required": True},
         "failures": sorted(set(failures)), "status": "APROVADO" if not failures else "BLOQUEADOR",
@@ -445,17 +568,30 @@ def http_response(path, credential=None, deploy_token=None):
     if deploy_token:
         headers["X-LPV-Deploy-Token"] = deploy_token
     request = Request(ORIGIN + path, method="GET", headers=headers)
-    try:
-        with build_opener(ProxyHandler({}), NoRedirects()).open(request, timeout=30) as response:
-            return {"status": response.status, "headers": dict(response.headers), "body": response.read()}
-    except HTTPError as error:
-        return {"status": error.code, "headers": dict(error.headers), "body": error.read()}
-    except (URLError, TimeoutError) as error:
-        raise RuntimeError("Deploy shield HTTP verification failed without logging credentials.") from error
+    transport_error_count = 0
+    for attempt in range(1, 4):
+        try:
+            with build_opener(ProxyHandler({}), NoRedirects()).open(request, timeout=30) as response:
+                return {"status": response.status, "headers": dict(response.headers),
+                        "body": response.read(), "transport_error_count": transport_error_count,
+                        "attempts": attempt}
+        except HTTPError as error:
+            return {"status": error.code, "headers": dict(error.headers), "body": error.read(),
+                    "transport_error_count": transport_error_count, "attempts": attempt}
+        except (URLError, TimeoutError, OSError) as error:
+            transport_error_count += 1
+            if attempt < 3:
+                time.sleep(0.25 * attempt)
+                continue
+            raise HTTPVerificationError(
+                "Deploy shield HTTP verification failed after 3 transport attempts.",
+                transport_error_count,
+            ) from error
 
 
 def verify_deploy_shield(credential, deploy_token):
     frontend = http_response("/")
+    authorized_frontend = http_response("/", deploy_token=deploy_token)
     public_rest = http_response("/wp-json/wp/v2/pages/7?context=edit&_fields=id")
     token_only = http_response("/wp-json/wp/v2/pages/7?context=edit&_fields=id",
                                deploy_token=deploy_token)
@@ -463,6 +599,8 @@ def verify_deploy_shield(credential, deploy_token):
                                credential=credential, deploy_token=deploy_token)
     if frontend["status"] != 503:
         raise RuntimeError("Deploy shield did not return HTTP 503 for the public frontend.")
+    if authorized_frontend["status"] != 200:
+        raise RuntimeError("Deploy token could not inspect the protected frontend.")
     if public_rest["status"] != 503:
         raise RuntimeError("Deploy shield did not return HTTP 503 for public REST.")
     if token_only["status"] not in (401, 403):
@@ -472,8 +610,12 @@ def verify_deploy_shield(credential, deploy_token):
     retry_after = frontend["headers"].get("Retry-After") or frontend["headers"].get("retry-after")
     if retry_after != "120":
         raise RuntimeError("Deploy shield frontend response is missing Retry-After.")
-    return {"frontend": 503, "public_rest": 503, "token_only": token_only["status"],
-            "authorized_rest": 200, "retry_after": 120}
+    return {"frontend": 503, "authorized_frontend": 200,
+            "public_rest": 503, "token_only": token_only["status"],
+            "authorized_rest": 200, "retry_after": 120,
+            "transport_error_count": sum(item.get("transport_error_count", 0)
+                                         for item in (frontend, authorized_frontend, public_rest,
+                                                      token_only, authorized))}
 
 
 def make_content_payload(state, rollback=False, current=None, page_ids=None):
@@ -860,7 +1002,35 @@ def rollback(backup, *, audit_after=True, journal=None, credential=None, deploy_
                 report["exceptions"].append(record)
         if own_remote_dir:
             cleanup_remote(remote_dir)
-    report["status"] = "APROVADO" if not report["exceptions"] else "PARCIAL"
+    try:
+        final_state = inspect_remote()
+        material_restored = (critical_fingerprint(final_state) == critical_fingerprint(state)
+                             and not deploy_shield_exists())
+        report["litespeed_operational_state"] = {
+            "classification": ("OPERATIONAL_STATE_CHANGED_BY_PURGE"
+                               if litespeed_purge_timestamp(final_state)
+                               != litespeed_purge_timestamp(state)
+                               else "UNCHANGED_DIAGNOSTIC"),
+            "timestamp_before": litespeed_purge_timestamp(state),
+            "timestamp_after": litespeed_purge_timestamp(final_state),
+            "stable_configuration_unchanged": (
+                stable_litespeed_configuration(final_state)
+                == stable_litespeed_configuration(state)),
+        }
+    except Exception:
+        material_restored = False
+    report["material_reconciliation"] = (
+        "MATERIAL_STATE_RESTORED" if material_restored else "MATERIAL_STATE_UNPROVEN")
+    transient_only = bool(report["exceptions"]) and all(
+        item.get("type") == "HTTPVerificationError"
+        and item.get("component") == "shield_verification"
+        for item in report["exceptions"])
+    if not report["exceptions"]:
+        report["status"] = "APROVADO"
+    elif transient_only and material_restored:
+        report["status"] = "APROVADO_COM_AVISO_TRANSITORIO"
+    else:
+        report["status"] = "PARCIAL"
     dump_json(EVIDENCE / "rollback.json", report)
     if audit_after and not deploy_shield_exists():
         try:
@@ -957,6 +1127,15 @@ def execute(backup, authorization):
         checkpoints.append(phase)
         attempt_event(attempt, phase, "COMPLETED", details=content_result)
 
+        phase = "stored_source_audit"
+        stored_after_content = inspect_remote()
+        stored_report = audit_stored_source(stored_after_content.get("pages", {}))
+        dump_json(EVIDENCE / "stored-source-post-deploy.json", stored_report)
+        if stored_report["status"] != "APROVADO":
+            raise RuntimeError("Stored source audit contains blocking findings.")
+        checkpoints.append(phase)
+        attempt_event(attempt, phase, "COMPLETED", details={"blockers": 0, "pages": 22})
+
         phase = "aioseo"
         seo_result = apply_seo(state, credential, deploy_token, journal)
         checkpoints.append(phase)
@@ -976,10 +1155,39 @@ def execute(backup, authorization):
         attempt_event(attempt, phase, "COMPLETED", details={"updated_ids": journal["status_changed_ids"]})
 
         phase = "cache"
+        litespeed_before_purge = inspect_remote()
+        purge_started_at = datetime.now(timezone.utc)
         cache_result = purge_litespeed_cache()
+        purge_completed_at = datetime.now(timezone.utc)
         journal["cache_purged"] = True
+        litespeed_after_purge = inspect_remote()
+        purge_read_at = datetime.now(timezone.utc)
+        purge_validation = validate_litespeed_purge(
+            litespeed_before_purge, litespeed_after_purge, purge_started_at,
+            purge_completed_at, purge_read_at)
+        dump_json(EVIDENCE / "litespeed-purge-state.json", purge_validation)
+        if purge_validation["status"] != "APROVADO":
+            raise RuntimeError("LiteSpeed purge changed stable configuration or produced an invalid timestamp.")
         checkpoints.append(phase)
-        attempt_event(attempt, phase, "COMPLETED", details=cache_result)
+        attempt_event(attempt, phase, "COMPLETED", details={
+            **cache_result,
+            "stable_configuration_unchanged": True,
+            "timestamp_classification": purge_validation["timestamp_classification"],
+        })
+
+        phase = "protected_fidelity_audit"
+        protected_reader = ProductionReader({"X-LPV-Deploy-Token": deploy_token})
+        protected = audit(protected_reader, stored_pages=inspect_remote().get("pages", {}))
+        dump_json(EVIDENCE / "protected-fidelity-post-deploy.json", protected)
+        if protected["status"] != "APROVADO":
+            raise RuntimeError("Protected before_optm and Page Optimization bypass audit failed.")
+        if not all(page["checks"].get("normal_public_scripts_preserved") == "APROVADO"
+                   and page["checks"].get("preoptimization_scripts_preserved") == "APROVADO"
+                   for page in protected["pages"]):
+            raise RuntimeError("Page Optimization bypass is not proven for all 22 pages.")
+        checkpoints.append(phase)
+        attempt_event(attempt, phase, "COMPLETED", details={"pages": 22, "blockers": 0,
+                                                             "bypass_confirmed": 22})
 
         phase = "deploy_shield_removal"
         shield_removal = remove_deploy_shield()
@@ -998,6 +1206,47 @@ def execute(backup, authorization):
         if post["status"] != "APROVADO":
             raise RuntimeError("Post-deploy audit contains blocking findings.")
         attempt_event(attempt, phase, "COMPLETED", details={"blockers": 0})
+
+        phase = "litespeed_global_settings_unchanged"
+        state_after_audit = inspect_remote()
+        if (stable_litespeed_configuration(state_after_audit)
+                != stable_litespeed_configuration(state)):
+            raise RuntimeError("Global LiteSpeed settings changed during deployment.")
+        checkpoints.append(phase)
+        attempt_event(attempt, phase, "COMPLETED", details={
+            "changed": False,
+            "operational_timestamp": purge_validation["timestamp_classification"],
+        })
+
+        phase = "browser_runtime_acceptance"
+        runtime = audit_runtime()
+        dump_json(EVIDENCE / "runtime-post-deploy.json", runtime)
+        if runtime["status"] != "APROVADO":
+            raise RuntimeError("Optimized browser runtime acceptance contains blocking findings.")
+        checkpoints.append(phase)
+        attempt_event(attempt, phase, "COMPLETED", details={"blockers": 0, "pages": 22,
+                                                             "forms_sent": 0,
+                                                             "analytics_sent": 0})
+
+        phase = "litespeed_page_cache_22"
+        cache_acceptance = verify_litespeed_page_cache()
+        dump_json(EVIDENCE / "litespeed-cache-post-deploy.json", cache_acceptance)
+        if cache_acceptance["status"] != "APROVADO":
+            raise RuntimeError("LiteSpeed cache probes did not return HTTP 200 for every mapped page.")
+        checkpoints.append(phase)
+        attempt_event(attempt, phase, "COMPLETED", details={
+            "blockers": 0, "pages": 22,
+            "cache_hit_count": cache_acceptance["cache_hit_count"],
+            "cache_hit_required": False,
+        })
+
+        phase = "read_only_warmup_audit"
+        warm = audit(ProductionReader(), stored_pages=inspect_remote().get("pages", {}))
+        dump_json(EVIDENCE / "post-deploy-warmup.json", warm)
+        if warm["status"] != "APROVADO":
+            raise RuntimeError("Read-only warm-up audit contains blocking findings.")
+        checkpoints.append(phase)
+        attempt_event(attempt, phase, "COMPLETED", details={"blockers": 0, "pages": 22})
     except Exception as error:
         primary = error
         attempt["primary_exception"] = exception_record(error)

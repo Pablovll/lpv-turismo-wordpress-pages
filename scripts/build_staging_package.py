@@ -84,7 +84,7 @@ def build():
     files["LANGUAGE-PLUGIN.md"] = (ROOT / "wordpress/plugins/lpv-language-seo/README.md").read_bytes()
     files["TEMPLATE-PLUGIN.md"] = (plugin / "README.md").read_bytes()
     files["application-plan.json"] = json_bytes({
-        "version": "1.0.0", "date": "2026-09-22", "automatic_deployment": False,
+        "version": "1.0.1", "date": "2026-09-25", "automatic_deployment": False,
         "target": "Protected staging clone; same IDs and root-relative paths",
         "template": "lpv-page-templates//lpv-content-only",
         "front_page": {"show_on_front": "page", "page_on_front": 7},
@@ -94,6 +94,12 @@ def build():
                   for record in records],
         "excluded": ["privacy", "posts", "archives", "search", "404"],
         "hreflang": "Runtime plugin only; do not paste static alternate tags",
+        "page_optimization": {
+            "provider": "LiteSpeed Cache",
+            "scope": "exactly the 22 approved LPV page IDs and paths",
+            "global_settings_changed": False,
+            "page_cache_preserved": True,
+        },
     })
     files["STRUCTURAL-VALIDATION.json"] = json_bytes({
         "scope": "Local fragment validation only; not a WordPress rendering result",

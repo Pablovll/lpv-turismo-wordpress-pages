@@ -1,6 +1,6 @@
 {
-  "version": "1.0.0",
-  "date": "2026-09-22",
+  "version": "1.0.1",
+  "date": "2026-09-25",
   "automatic_deployment": false,
   "target": "Protected staging clone; same IDs and root-relative paths",
   "template": "lpv-page-templates//lpv-content-only",
@@ -182,5 +182,11 @@
     "search",
     "404"
   ],
-  "hreflang": "Runtime plugin only; do not paste static alternate tags"
+  "hreflang": "Runtime plugin only; do not paste static alternate tags",
+  "page_optimization": {
+    "provider": "LiteSpeed Cache",
+    "scope": "exactly the 22 approved LPV page IDs and paths",
+    "global_settings_changed": false,
+    "page_cache_preserved": true
+  }
 }

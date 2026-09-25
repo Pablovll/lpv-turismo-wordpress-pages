@@ -30,14 +30,21 @@ function wp_get_theme( $name = null ) { return new class { public function exist
 class WP_Query { public $posts = array(); public function __construct( $args ) {} }
 function wp_is_block_theme() { return $GLOBALS['state']['block']; }
 function is_admin() { return $GLOBALS['state']['admin']; }
+function wp_doing_ajax() { return $GLOBALS['state']['ajax']; }
+function wp_doing_cron() { return $GLOBALS['state']['cron']; }
 function is_feed() { return $GLOBALS['state']['feed']; }
 function is_embed() { return $GLOBALS['state']['embed']; }
+function is_preview() { return $GLOBALS['state']['preview']; }
+function is_search() { return $GLOBALS['state']['search']; }
+function is_404() { return $GLOBALS['state']['404']; }
 function is_singular( $type ) { return 'page' === $type && $GLOBALS['state']['singular']; }
 function is_front_page() { return $GLOBALS['state']['front']; }
 function get_queried_object_id() { return $GLOBALS['state']['id']; }
 function get_permalink( $id ) { return $GLOBALS['state']['url']; }
 function get_option( $key ) { return $GLOBALS['state'][ $key ] ?? false; }
 function wpautop( $content ) { return '<p>' . $content . '</p>'; }
+function wp_unslash( $value ) { return $value; }
+function trailingslashit( $value ) { return rtrim( $value, '/\\' ) . '/'; }
 
 $root = dirname( __DIR__, 2 );
 $rows = json_decode( file_get_contents( $root . '/docs/stage-4-language-map.json' ), true, 512, JSON_THROW_ON_ERROR )['pages'];
@@ -45,8 +52,12 @@ $assertions = 0;
 function reset_fixture( $id = 7, $path = '/' ) {
 	$GLOBALS['state'] = array( 'id' => $id, 'url' => 'https://staging.example.test' . $path,
 		'theme' => 'twentytwentyfive', 'block' => true, 'admin' => false,
-		'feed' => false, 'embed' => false, 'singular' => true, 'front' => 7 === $id,
+		'ajax' => false, 'cron' => false, 'feed' => false, 'embed' => false,
+		'preview' => false, 'search' => false, '404' => false,
+		'singular' => true, 'front' => 7 === $id,
 		'show_on_front' => 'page', 'page_on_front' => '7' );
+	$_SERVER['REQUEST_URI'] = $path;
+	$GLOBALS['pagenow'] = 'index.php';
 }
 function same( $expected, $actual, $label ) {
 	++$GLOBALS['assertions'];
@@ -100,6 +111,7 @@ try {
 		$resolved = resolve_block_template( $type, $hierarchy, '' );
 		same( $template->id, $resolved->id, 'Core resolves LPV ' . $row['id'] );
 		same( $template->content, $resolved->content, 'Resolved content preserved' );
+		same( false, apply_filters( 'litespeed_can_optm', true ), 'Page optimization bypass ' . $row['id'] );
 		$GLOBALS['state']['url'] = $row['canonical'];
 		same( $hierarchy, apply_filters( $type . '_template_hierarchy', $original ), 'Official domain accepted' );
 		foreach ( array( '/wrong/', '/clone' . $row['url'] ) as $path ) {
@@ -109,10 +121,11 @@ try {
 	}
 
 	$original = array( 'page.php', 'index.php' );
-	foreach ( array( 'admin', 'feed', 'embed' ) as $key ) {
+	foreach ( array( 'admin', 'ajax', 'cron', 'feed', 'embed', 'preview', 'search', '404' ) as $key ) {
 		reset_fixture( 17, '/passeios/' );
 		$GLOBALS['state'][ $key ] = true;
 		same( $original, apply_filters( 'page_template_hierarchy', $original ), 'Excluded context ' . $key );
+		same( true, apply_filters( 'litespeed_can_optm', true ), 'Optimization retained ' . $key );
 	}
 	foreach ( array( 'singular', 'block' ) as $key ) {
 		reset_fixture( 17, '/passeios/' );
@@ -122,7 +135,18 @@ try {
 	foreach ( array( 0, 999, 256 ) as $id ) {
 		reset_fixture( $id, '/politica-de-privacidade/' );
 		same( $original, apply_filters( 'page_template_hierarchy', $original ), 'Unmapped ID' );
+		same( true, apply_filters( 'litespeed_can_optm', true ), 'Unmapped optimization unchanged' );
 	}
+	reset_fixture( 17, '/passeios/' );
+	$_SERVER['REQUEST_URI'] = '/passeios/?utm_source=fixture';
+	same( false, apply_filters( 'litespeed_can_optm', true ), 'Query does not change approved path' );
+	foreach ( array( '/passeios-extra/', '/passeios/subpath/', '/passeios%2F' ) as $path ) {
+		$_SERVER['REQUEST_URI'] = $path;
+		same( true, apply_filters( 'litespeed_can_optm', true ), 'Similar path remains optimized' );
+	}
+	reset_fixture( 17, '/passeios/' );
+	$GLOBALS['pagenow'] = 'wp-login.php';
+	same( true, apply_filters( 'litespeed_can_optm', true ), 'Login remains optimized' );
 	reset_fixture( 17, '/passeios/' );
 	$GLOBALS['state']['theme'] = 'another-theme';
 	same( $original, apply_filters( 'page_template_hierarchy', $original ), 'Other theme unchanged' );

@@ -7,7 +7,8 @@ from urllib.error import HTTPError
 
 from scripts.audit_production import ProductionReader, normalized_probe_result
 from scripts.content_fidelity import (compare_rendered_content, compare_rendered_images,
-                                      compare_stored_content)
+                                      compare_script_sources, compare_stored_content,
+                                      optimized_script_delivery)
 
 
 FIXTURES = Path(__file__).parent / "fixtures/render-fidelity"
@@ -126,6 +127,28 @@ class RenderFidelityTests(unittest.TestCase):
         replaced = compare_stored_content(self.approved, self.approved.replace(
             "photo-scaled.jpg", "another-photo.jpg"))
         self.assertFalse(replaced["image_urls_preserved"])
+
+    def test_stored_script_source_only_normalizes_encoding_and_newlines(self):
+        crlf = self.approved.replace("\n", "\r\n")
+        self.assertTrue(compare_script_sources(self.approved, crlf)["preserved"])
+        comments_removed = self.approved.replace("// analytics fixture\n", "", 1)
+        if comments_removed == self.approved:
+            comments_removed = self.approved.replace("const endpoint", "/* changed */const endpoint", 1)
+        self.assertFalse(compare_script_sources(self.approved, comments_removed)["preserved"])
+        endpoint = self.approved.replace("/wp-json/lpv/v1/context", "/wp-json/lpv/v2/context", 1)
+        self.assertFalse(compare_script_sources(self.approved, endpoint)["preserved"])
+        handler = self.approved.replace("button.addEventListener", "button.removeEventListener", 1)
+        self.assertFalse(compare_script_sources(self.approved, handler)["preserved"])
+
+    def test_optimized_delivery_is_diagnostic_not_lexical_equivalence(self):
+        transformed = self.cosmetic.replace("='yes');</script>", "='yes')</script>", 1)
+        strict = compare_rendered_content(self.approved, transformed)
+        optimized = compare_rendered_content(self.approved, transformed, strict_scripts=False)
+        self.assertIn("scripts", strict["failures"])
+        self.assertNotIn("scripts", optimized["failures"])
+        delivery = optimized_script_delivery(self.approved, transformed)
+        self.assertTrue(delivery["detected"])
+        self.assertEqual(delivery["records"][0]["delivery"], "litespeed")
 
     def test_required_negative_cases_fail_without_weakening_the_auditor(self):
         content_cases = {

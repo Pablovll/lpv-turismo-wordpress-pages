@@ -1,5 +1,10 @@
 # Etapa 7P.4 - diagnostico final de fidelidade renderizada
 
+> Evolucao em 25/09/2026: a Etapa 7P.5 substituiu a igualdade lexical de scripts
+> pos-otimizacao pelos contratos Stored Source, `before_optm` e browser runtime.
+> Este documento permanece como historico do diagnostico que revelou a limitacao.
+> Consulte `docs/stage-7p5-final-deploy-architecture.md`.
+
 Data da analise: 2026-09-25.
 
 Esta etapa nao executa deploy, nao altera WordPress e nao envia formularios. As

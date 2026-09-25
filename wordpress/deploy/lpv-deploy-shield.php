@@ -50,7 +50,8 @@ function lpv_deploy_shield_rest_retry_after( $response ) {
 add_filter( 'rest_post_dispatch', 'lpv_deploy_shield_rest_retry_after', PHP_INT_MAX );
 
 function lpv_deploy_shield_frontend() {
-	if ( ! lpv_deploy_shield_is_active() || is_admin() || wp_doing_ajax() || wp_doing_cron() ) {
+	if ( ! lpv_deploy_shield_is_active() || lpv_deploy_shield_token_is_valid()
+		|| is_admin() || wp_doing_ajax() || wp_doing_cron() ) {
 		return;
 	}
 

@@ -28,7 +28,8 @@ class Stage6StaticTests(unittest.TestCase):
     def test_scoped_native_hooks_only(self):
         source = (PLUGIN / "lpv-page-templates.php").read_text(encoding="utf-8")
         self.assertEqual(re.findall(r"add_(?:action|filter)\( '([^']+)'", source),
-                         ["page_template_hierarchy", "frontpage_template_hierarchy", "init", "wp"])
+                         ["page_template_hierarchy", "frontpage_template_hierarchy", "init", "wp",
+                          "litespeed_can_optm"])
         self.assertIn("remove_filter( 'the_content', 'wpautop' )", source)
         self.assertIn("lpv_page_templates_is_managed_request()", source)
         self.assertIn("register_block_template(", source)
@@ -36,8 +37,11 @@ class Stage6StaticTests(unittest.TestCase):
         self.assertIn("if ( ! defined( 'ABSPATH' ) )", source)
         self.assertNotRegex(source, r"\b(?:wp_remote_\w+|curl_\w+|update_\w+|delete_\w+|"
                             r"wp_insert_\w+|wp_update_\w+|remove_all_\w+|eval|exec)\s*\(")
-        self.assertNotRegex(source, r"\$_(?:GET|POST|REQUEST|SERVER)|\$wpdb|<meta|<script|<title|"
+        self.assertNotRegex(source, r"\$_(?:GET|POST|REQUEST)|\$wpdb|<meta|<script|<title|"
                             r"rel=.canonical|wp_head\(|wp_footer\(|echo\s|print\s")
+        self.assertEqual(source.count("$_SERVER['REQUEST_URI']"), 2)
+        self.assertIn("return lpv_page_templates_is_managed_request() ? false : $can_optimize;",
+                      source)
         self.assertIn("__DIR__ . '/templates/lpv-content-only.html'", source)
 
     def test_template_identity_and_22_expected_structures(self):
@@ -104,6 +108,12 @@ class Stage6StaticTests(unittest.TestCase):
         self.assertEqual(plan["front_page"], {"show_on_front": "page", "page_on_front": 7})
         self.assertEqual(len(plan["pages"]), 22)
         self.assertEqual(plan["excluded"], ["privacy", "posts", "archives", "search", "404"])
+        self.assertEqual(plan["page_optimization"], {
+            "provider": "LiteSpeed Cache",
+            "scope": "exactly the 22 approved LPV page IDs and paths",
+            "global_settings_changed": False,
+            "page_cache_preserved": True,
+        })
 
     def test_staging_build_is_reproducible(self):
         archive = ROOT / "publication/lpv-wordpress-stage-6.zip"

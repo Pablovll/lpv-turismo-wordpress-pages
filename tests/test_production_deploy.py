@@ -4,10 +4,12 @@ import json
 import secrets
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from threading import Thread
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+from urllib.error import URLError
 
 from scripts.audit_production import ORIGIN, audit, classify_baseline
 from scripts.backup_production import validate_backup
@@ -18,8 +20,10 @@ from scripts.deploy_production import (AUTHORIZATION, apply_seo,
                                        http_response, make_content_payload, new_journal,
                                        parse_helper_result, remove_deploy_shield,
                                        reconcile_journal, render_deploy_shield, rest_request, rollback,
-                                       state_identity_failures)
-from scripts.production_common import PACKAGE, ROOT, load_metadata, load_pages, sha256_bytes
+                                       state_identity_failures, validate_litespeed_purge,
+                                       verify_litespeed_page_cache)
+from scripts.production_common import (PACKAGE, ROOT, load_metadata, load_pages,
+                                       material_fingerprint, sha256_bytes)
 
 ROWS = load_pages()
 META = load_metadata()
@@ -74,6 +78,13 @@ def production_document(row):
 
 
 class ProductionAuditTests(unittest.TestCase):
+    def test_before_optimization_query_preserves_existing_parameters(self):
+        from scripts.audit_production import before_optimization_path
+        self.assertEqual(before_optimization_path("/?sent=1"),
+                         "/?sent=1&LSCWP_CTRL=before_optm")
+        self.assertEqual(before_optimization_path("/en/?LSCWP_CTRL=old&x=1"),
+                         "/en/?x=1&LSCWP_CTRL=before_optm")
+
     def test_preexisting_target_differences_do_not_block_baseline(self):
         strict = {
             "status": "BLOQUEADOR",
@@ -151,11 +162,55 @@ class ProductionAuditTests(unittest.TestCase):
         self.assertEqual(report["blockers"], [])
         self.assertEqual(report["forms_sent"], 0)
         for page in report["pages"]:
-            for check in ("stored_content_preserved", "rendered_content_preserved",
+            for check in ("stored_content_preserved", "stored_script_source_preserved",
+                          "normal_public_scripts_preserved",
+                          "preoptimization_rendered_content_preserved",
+                          "preoptimization_scripts_preserved", "rendered_content_preserved",
                           "stored_image_urls_preserved",
                           "rendered_primary_image_urls_preserved",
                           "derived_image_urls_valid"):
                 self.assertEqual(page["checks"][check], "APROVADO")
+
+    def test_normal_public_script_change_is_blocking_after_scoped_bypass(self):
+        class Reader:
+            def get(self, path):
+                if path == "/politica-de-privacidade/":
+                    return {"status": 200, "url": ORIGIN + path,
+                            "body": "<html><main>Politica</main></html>"}
+                if path.startswith("/?s="):
+                    return {"status": 200, "url": ORIGIN + path, "body": "<html><main>Busca</main></html>"}
+                if path == "/lpv-audit-7f1c9b/":
+                    return {"status": 404, "url": ORIGIN + path, "body": "<html><main>404</main></html>"}
+                if path.startswith("/wp-json/wp/v2/posts"):
+                    return {"status": 200, "url": ORIGIN + path, "body": "[]"}
+                row = next(item for item in ROWS if item["url"] == path)
+                body = production_document(row).replace("</script>", ";</script>", 1)
+                return {"status": 200, "url": row["canonical"], "body": body}
+
+            def get_preoptimization(self, path):
+                row = next(item for item in ROWS if item["url"] == path)
+                return {"status": 200, "url": row["canonical"] + "?LSCWP_CTRL=before_optm",
+                        "body": production_document(row)}
+
+        stored = {str(row["id"]): {"exists": True, "content": (
+            PACKAGE / "html" / row["source"].removeprefix("pages/")).read_text(encoding="utf-8")}
+                  for row in ROWS}
+        report = audit(Reader(), stored_pages=stored)
+        self.assertEqual(report["status"], "BLOQUEADOR")
+        self.assertIn(f"page:{ROWS[0]['id']}:normal_public_scripts_preserved",
+                      report["blockers"])
+
+    def test_before_optm_script_change_is_a_real_blocker(self):
+        row = ROWS[0]
+        approved = (PACKAGE / "html" / row["source"].removeprefix("pages/")).read_text(
+            encoding="utf-8")
+        from scripts.audit_production import inspect_page
+        response = {"status": 200, "url": row["canonical"], "body": production_document(row)}
+        broken = dict(response)
+        broken["body"] = response["body"].replace("lpv_whatsapp_click", "lpv_broken_click", 1)
+        page = inspect_page(row, META[row["id"]], response,
+                            {"exists": True, "content": approved}, None, broken)
+        self.assertEqual(page["checks"]["preoptimization_scripts_preserved"], "BLOQUEADOR")
 
     def test_wpautop_script_corruption_remains_a_real_render_blocker(self):
         row = ROWS[0]
@@ -172,6 +227,162 @@ class ProductionAuditTests(unittest.TestCase):
 
 
 class BackupAndDeploymentTests(unittest.TestCase):
+    def test_material_fingerprint_ignores_timestamp_but_blocks_real_changes(self):
+        baseline = {
+            "home": ORIGIN, "siteurl": ORIGIN, "template": "twentytwentyfive",
+            "stylesheet": "twentytwentyfive", "options": {"show_on_front": "page"},
+            "custom_css_sha256": "css", "plugins": {"lpv": {"status": "active"}},
+            "wp_templates": [], "aioseo_option_hashes": {"aioseo": "option"},
+            "litespeed_option_hashes": {"litespeed.conf.cache": "option"},
+            "pages": {"7": {"path": "/", "post_type": "page", "post_name": "home",
+                              "post_parent": 0, "post_status": "publish",
+                              "content_sha256": "content", "post_modified_gmt": "before",
+                              "aioseo": {"title": "Title", "description": "Description"}}},
+        }
+        timestamp = json.loads(json.dumps(baseline))
+        timestamp["pages"]["7"]["post_modified_gmt"] = "after"
+        self.assertEqual(material_fingerprint(baseline), material_fingerprint(timestamp))
+        for path, value in (
+                (("pages", "7", "content_sha256"), "changed"),
+                (("pages", "7", "post_status"), "draft"),
+                (("pages", "7", "aioseo"), {"title": "Changed"}),
+                (("custom_css_sha256",), "changed"),
+                (("litespeed_option_hashes",), {"litespeed.conf.cache": "changed"}),
+                (("plugins",), {"lpv": {"status": "inactive"}})):
+            changed = json.loads(json.dumps(baseline))
+            target = changed
+            for key in path[:-1]:
+                target = target[key]
+            target[path[-1]] = value
+            self.assertNotEqual(material_fingerprint(baseline), material_fingerprint(changed), path)
+
+    @staticmethod
+    def litespeed_state(timestamp=1000, stable=None):
+        return {
+            "litespeed_stable_configuration": stable or {
+                "litespeed.conf.optm-css_min": "css-off",
+                "litespeed.conf.optm-js_min": "js-off",
+                "litespeed.conf.optm-js_defer": "defer-off",
+                "litespeed.conf.optm-js_delay": "delay-off",
+                "litespeed.conf.cache": "cache-on",
+            },
+            "litespeed_operational_state": {
+                "litespeed.optimize.timestamp_purge_css": {
+                    "value": str(timestamp), "sha256": "fixture"},
+            },
+        }
+
+    @staticmethod
+    def purge_times():
+        return tuple(datetime.fromtimestamp(value, timezone.utc) for value in (1000, 1001, 1002))
+
+    def test_litespeed_timestamp_change_after_purge_passes(self):
+        report = validate_litespeed_purge(
+            self.litespeed_state(900), self.litespeed_state(1001), *self.purge_times())
+        self.assertEqual(report["status"], "APROVADO")
+        self.assertEqual(report["timestamp_classification"], "EXPECTED_OPERATIONAL_CHANGE")
+
+    def test_litespeed_timestamp_unchanged_is_diagnostic(self):
+        report = validate_litespeed_purge(
+            self.litespeed_state(900), self.litespeed_state(900), *self.purge_times())
+        self.assertEqual(report["status"], "APROVADO")
+        self.assertEqual(report["timestamp_classification"], "UNCHANGED_DIAGNOSTIC")
+
+    def test_litespeed_future_timestamp_fails(self):
+        report = validate_litespeed_purge(
+            self.litespeed_state(900), self.litespeed_state(2000), *self.purge_times())
+        self.assertEqual(report["status"], "BLOQUEADOR")
+        self.assertIn("timestamp_purge_css:future_value", report["blockers"])
+
+    def test_litespeed_timestamp_plus_js_minify_change_fails(self):
+        after = self.litespeed_state(1001)
+        after["litespeed_stable_configuration"]["litespeed.conf.optm-js_min"] = "js-on"
+        report = validate_litespeed_purge(self.litespeed_state(900), after, *self.purge_times())
+        self.assertEqual(report["status"], "BLOQUEADOR")
+        self.assertIn("litespeed.conf.optm-js_min", report["stable_configuration_changed_options"])
+
+    def test_litespeed_timestamp_plus_js_defer_change_fails(self):
+        after = self.litespeed_state(1001)
+        after["litespeed_stable_configuration"]["litespeed.conf.optm-js_defer"] = "defer-on"
+        report = validate_litespeed_purge(self.litespeed_state(900), after, *self.purge_times())
+        self.assertEqual(report["status"], "BLOQUEADOR")
+        self.assertIn("litespeed.conf.optm-js_defer", report["stable_configuration_changed_options"])
+
+    def test_rollback_fingerprint_accepts_only_operational_timestamp_change(self):
+        before = self.litespeed_state(900)
+        after = self.litespeed_state(1001)
+        self.assertEqual(material_fingerprint(before), material_fingerprint(after))
+
+    def test_material_change_plus_operational_timestamp_still_fails(self):
+        before = self.litespeed_state(900)
+        after = self.litespeed_state(1001)
+        after["litespeed_stable_configuration"]["litespeed.conf.cache"] = "cache-off"
+        self.assertNotEqual(material_fingerprint(before), material_fingerprint(after))
+
+    def test_every_monitored_stable_litespeed_change_remains_blocking(self):
+        for option in ("litespeed.conf.optm-js_min", "litespeed.conf.optm-js_defer",
+                       "litespeed.conf.optm-js_delay", "litespeed.conf.optm-css_min",
+                       "litespeed.conf.cache", "litespeed.example.other_setting"):
+            with self.subTest(option=option):
+                before = self.litespeed_state(900)
+                after = self.litespeed_state(1001)
+                before["litespeed_stable_configuration"].setdefault(option, "before")
+                after["litespeed_stable_configuration"][option] = "after"
+                report = validate_litespeed_purge(before, after, *self.purge_times())
+                self.assertEqual(report["status"], "BLOQUEADOR")
+                self.assertIn(option, report["stable_configuration_changed_options"])
+
+    def test_http_verification_retries_transient_transport_and_reports_count(self):
+        class Response:
+            status = 503
+            headers = {"Retry-After": "120"}
+            def __enter__(self): return self
+            def __exit__(self, *_args): return False
+            def read(self): return b"fixture"
+
+        opener = type("Opener", (), {})()
+        opener.open = Mock(side_effect=[URLError("reset"), Response()])
+        with patch.object(deploy_production, "build_opener", return_value=opener), \
+             patch.object(deploy_production.time, "sleep"):
+            result = http_response("/")
+        self.assertEqual(result["status"], 503)
+        self.assertEqual(result["transport_error_count"], 1)
+        self.assertEqual(result["attempts"], 2)
+
+    def test_http_verification_persistent_transport_failure_blocks(self):
+        opener = type("Opener", (), {})()
+        opener.open = Mock(side_effect=URLError("reset"))
+        with patch.object(deploy_production, "build_opener", return_value=opener), \
+             patch.object(deploy_production.time, "sleep"):
+            with self.assertRaises(deploy_production.HTTPVerificationError) as raised:
+                http_response("/")
+        self.assertEqual(raised.exception.transport_error_count, 3)
+
+    def test_litespeed_cache_acceptance_requires_hits_for_all_22_pages(self):
+        class Reader:
+            def __init__(self):
+                self.calls = {}
+
+            def get(self, path):
+                self.calls[path] = self.calls.get(path, 0) + 1
+                cache = "miss" if self.calls[path] == 1 else "hit"
+                return {"status": 200, "headers": {"X-LiteSpeed-Cache": cache}}
+
+        report = verify_litespeed_page_cache(Reader())
+        self.assertEqual(report["status"], "APROVADO")
+        self.assertEqual(len(report["pages"]), 22)
+        self.assertTrue(all(page["cache_hit_observed"] for page in report["pages"]))
+
+    def test_litespeed_cache_acceptance_records_missing_hit_as_diagnostic(self):
+        class Reader:
+            def get(self, _path):
+                return {"status": 200, "headers": {}}
+
+        report = verify_litespeed_page_cache(Reader())
+        self.assertEqual(report["status"], "APROVADO")
+        self.assertEqual(report["cache_hit_count"], 0)
+        self.assertEqual(report["blockers"], [])
+
     def test_private_backup_manifest_and_gzip(self):
         with tempfile.TemporaryDirectory() as temporary:
             folder = Path(temporary)
@@ -218,9 +429,13 @@ class BackupAndDeploymentTests(unittest.TestCase):
         self.assertNotIn("formsubmit.co", deployer.lower())
         self.assertNotIn("debugview", deployer.lower())
 
-    def test_dry_run_names_all_five_fidelity_contracts(self):
+    def test_dry_run_names_all_final_fidelity_contracts(self):
         source = (ROOT / "scripts/deploy_production.py").read_text(encoding="utf-8")
-        for check in ("stored_content_preserved", "rendered_content_preserved",
+        for check in ("stored_content_preserved", "stored_script_source_preserved",
+                      "normal_public_scripts_preserved",
+                      "preoptimization_rendered_content_preserved",
+                      "preoptimization_scripts_preserved", "browser_runtime_acceptance",
+                      "rendered_content_preserved",
                       "stored_image_urls_preserved", "rendered_primary_image_urls_preserved",
                       "derived_image_urls_valid"):
             self.assertIn(check, source)
