@@ -61,8 +61,11 @@ class ProductionReader:
         if (parsed.scheme != "https" or parsed.hostname != "lpvturismo.com"
                 or parsed.username or parsed.password or parsed.fragment
                 or not parsed.path.startswith("/wp-content/uploads/")):
-            self.image_probes[url] = 0
-            return 0
+            result = {"url": sanitized_resource_url(url), "http_status": None,
+                      "content_type": "", "redirect": None,
+                      "error": "policy_rejected", "reachable": False}
+            self.image_probes[url] = result
+            return result
         request_url = urlunsplit((parsed.scheme, parsed.netloc, quote(parsed.path, safe="/%:@"),
                                   parsed.query, ""))
         request = Request(request_url, headers={
@@ -77,10 +80,56 @@ class ProductionReader:
                 response = error
             with response:
                 status = response.status
-        except (URLError, TimeoutError, OSError, UnicodeError):
-            status = 0
-        self.image_probes[url] = status
-        return status
+                content_type = response.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+                location = response.headers.get("Location")
+                result = {
+                    "url": sanitized_resource_url(url),
+                    "http_status": status,
+                    "content_type": content_type,
+                    "redirect": sanitized_resource_url(location) if location else None,
+                    "error": "http_error" if status >= 400 else ("redirect" if 300 <= status < 400 else None),
+                    "reachable": status in (200, 206) and content_type.startswith("image/"),
+                }
+        except TimeoutError:
+            result = {"url": sanitized_resource_url(url), "http_status": None,
+                      "content_type": "", "redirect": None,
+                      "error": "timeout", "reachable": False}
+        except URLError as error:
+            kind = "timeout" if isinstance(getattr(error, "reason", None), TimeoutError) else "network_error"
+            result = {"url": sanitized_resource_url(url), "http_status": None,
+                      "content_type": "", "redirect": None,
+                      "error": kind, "reachable": False}
+        except (OSError, UnicodeError):
+            result = {"url": sanitized_resource_url(url), "http_status": None,
+                      "content_type": "", "redirect": None,
+                      "error": "network_error", "reachable": False}
+        self.image_probes[url] = result
+        return result
+
+
+def sanitized_resource_url(url):
+    if not url:
+        return ""
+    parsed = urlsplit(url)
+    host = parsed.hostname or ""
+    port = f":{parsed.port}" if parsed.port else ""
+    return urlunsplit((parsed.scheme, host + port, parsed.path, "", ""))
+
+
+def normalized_probe_result(url, result):
+    if isinstance(result, int):
+        return {"url": sanitized_resource_url(url), "http_status": result,
+                "content_type": "image/unknown" if result in (200, 206) else "",
+                "redirect": None, "error": None if result in (200, 206) else "http_error",
+                "reachable": result in (200, 206)}
+    normalized = {"url": sanitized_resource_url(url), "http_status": None,
+                  "content_type": "", "redirect": None,
+                  "error": "unknown_probe_failure", "reachable": False}
+    normalized.update(result)
+    normalized["url"] = sanitized_resource_url(normalized.get("url") or url)
+    if normalized.get("redirect"):
+        normalized["redirect"] = sanitized_resource_url(normalized["redirect"])
+    return normalized
 
 
 def state(condition):
@@ -132,21 +181,28 @@ def inspect_page(row, metadata, response, stored_page=None, image_probe=None):
         state(stored["image_urls_preserved"]) if stored is not None else "NAO TESTADO")
 
     rendered_content = {"preserved": False, "failures": ["content_container"],
-                        "expected": {}, "observed": {}}
+                        "expected": {}, "observed": {}, "diagnostics": {}}
     rendered_images = {"primary_preserved": False, "derived_valid": False,
                        "failures": ["content_container"], "expected_primary_count": 0,
                        "observed_primary_count": 0, "primary_http_urls": [],
-                       "derived_http_urls": []}
+                       "derived_http_urls": [], "probe_targets": []}
     if len(containers) == 1:
         rendered_content = compare_rendered_content(approved, containers[0])
         rendered_images = compare_rendered_images(approved, containers[0])
     checks["rendered_content_preserved"] = state(rendered_content["preserved"])
     checks["rendered_primary_image_urls_preserved"] = state(rendered_images["primary_preserved"])
-    probe_results = {}
+    probe_results = []
     if image_probe:
-        for url in rendered_images["primary_http_urls"] + rendered_images["derived_http_urls"]:
-            probe_results[url] = image_probe(url)
-    reachable = all(status in (200, 206) for status in probe_results.values())
+        targets = rendered_images.get("probe_targets", [])
+        if not targets:
+            targets = [{"url": url, "classification": "other", "source": "legacy",
+                        "in_stored_content": False}
+                       for url in rendered_images["primary_http_urls"]
+                       + rendered_images["derived_http_urls"]]
+        for target in targets:
+            result = normalized_probe_result(target["url"], image_probe(target["url"]))
+            probe_results.append({"page_id": row["id"], **target, **result})
+    reachable = all(result["reachable"] for result in probe_results)
     checks["derived_image_urls_valid"] = state(rendered_images["derived_valid"] and reachable)
     body = response.get("body", "").lower()
     checks["aioseo_present"] = state("all in one seo" in body or "aioseo" in body)
@@ -160,12 +216,13 @@ def inspect_page(row, metadata, response, stored_page=None, image_probe=None):
                 "rendered_content_failures": rendered_content["failures"],
                 "rendered_content_expected": rendered_content["expected"],
                 "rendered_content_observed": rendered_content["observed"],
+                "rendered_content_diagnostics": rendered_content.get("diagnostics", {}),
                 "rendered_image_failures": rendered_images["failures"],
                 "expected_primary_images": rendered_images["expected_primary_count"],
                 "observed_primary_images": rendered_images["observed_primary_count"],
                 "image_probe_count": len(probe_results),
-                "failed_image_probe_count": sum(status not in (200, 206)
-                                                  for status in probe_results.values()),
+                "failed_image_probe_count": sum(not result["reachable"] for result in probe_results),
+                "failed_image_probes": [result for result in probe_results if not result["reachable"]],
             }}
 
 

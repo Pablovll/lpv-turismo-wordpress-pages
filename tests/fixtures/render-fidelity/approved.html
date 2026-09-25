@@ -1,3 +1,4 @@
+<!-- Approved editorial note removed by HTML optimization. -->
 <div class="lpv-simple-page">
   <header class="topbar" data-layout="approved">
     <nav aria-label="Primary navigation"><a href="/passeios/">Passeios</a></nav>
@@ -21,9 +22,11 @@
   </section>
   <script>
     const button = document.querySelector('.lpv-button');
+    const endpoint = '/wp-json/lpv/v1/context';
     button.addEventListener('click', () => button.dataset.clicked = 'yes');
   </script>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter');
     .hero { background-image: url('https://lpvturismo.com/wp-content/uploads/2026/06/hero.jpg'); }
   </style>
   <footer class="footer lpv-site-footer"><a href="/politica-de-privacidade/">Privacidade</a></footer>

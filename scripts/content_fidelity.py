@@ -2,14 +2,16 @@
 """Semantic content and image fidelity contracts for LPV WordPress pages."""
 import base64
 import binascii
+import hashlib
 import html
 import re
 import unicodedata
 from collections import Counter
+from difflib import SequenceMatcher
 from pathlib import PurePosixPath
-from urllib.parse import unquote, urlsplit
+from urllib.parse import unquote, urlsplit, urlunsplit
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment, Declaration, Doctype, ProcessingInstruction
 
 
 ESSENTIAL_CLASS_NAMES = {
@@ -18,6 +20,7 @@ ESSENTIAL_CLASS_NAMES = {
     "process", "cta", "footer",
 }
 SKIPPED_TEXT_PARENTS = {"script", "style", "template", "noscript"}
+SKIPPED_TEXT_NODES = (Comment, Declaration, Doctype, ProcessingInstruction)
 TYPOGRAPHY_EQUIVALENTS = str.maketrans({
     "\u00a0": " ", "\u2018": "'", "\u2019": "'", "\u201a": "'",
     "\u201c": '"', "\u201d": '"', "\u201e": '"',
@@ -30,6 +33,7 @@ CODE_TOKEN = re.compile(
     re.DOTALL,
 )
 CSS_URL = re.compile(r"url\(\s*(['\"]?)(.*?)\1\s*\)", re.IGNORECASE | re.DOTALL)
+CSS_IMAGE_EXTENSIONS = (".avif", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp")
 
 
 def parse_fragment(value):
@@ -47,7 +51,8 @@ def normalize_text(value):
 def visible_text(soup):
     values = []
     for node in soup.find_all(string=True):
-        if node.parent and node.parent.name not in SKIPPED_TEXT_PARENTS:
+        if (not isinstance(node, SKIPPED_TEXT_NODES)
+                and node.parent and node.parent.name not in SKIPPED_TEXT_PARENTS):
             values.append(str(node))
     return normalize_text(" ".join(values))
 
@@ -57,9 +62,158 @@ def code_tokens(value):
                  if not token.startswith("//") and not token.startswith("/*"))
 
 
+def sha256_text(value):
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def text_diagnostics(expected, observed):
+    expected_tokens = expected.split()
+    observed_tokens = observed.split()
+    matcher = SequenceMatcher(a=expected_tokens, b=observed_tokens, autojunk=False)
+    opcode = next((item for item in matcher.get_opcodes() if item[0] != "equal"),
+                  ("equal", len(expected_tokens), len(expected_tokens),
+                   len(observed_tokens), len(observed_tokens)))
+    kind, expected_start, expected_end, observed_start, observed_end = opcode
+    character_index = next(
+        (index for index, pair in enumerate(zip(expected, observed)) if pair[0] != pair[1]),
+        min(len(expected), len(observed)),
+    )
+    approved_tokens = set(expected_tokens)
+
+    def safe_observed(token):
+        if token not in approved_tokens:
+            return "[REDACTED]"
+        if "@" in token or re.search(r"\d{6,}", token):
+            return "[REDACTED]"
+        return token
+
+    expected_context = expected_tokens[max(0, expected_start - 4):min(
+        len(expected_tokens), max(expected_end, expected_start + 1) + 4)]
+    observed_context = observed_tokens[max(0, observed_start - 4):min(
+        len(observed_tokens), max(observed_end, observed_start + 1) + 4)]
+    snippets = []
+    if expected_context:
+        snippets.append({"kind": "expected_approved", "text": " ".join(expected_context)})
+    if observed_context:
+        snippets.append({"kind": "observed_redacted",
+                         "text": " ".join(safe_observed(token) for token in observed_context)})
+    return {
+        "expected_sha256": sha256_text(expected),
+        "observed_sha256": sha256_text(observed),
+        "expected_length": len(expected),
+        "observed_length": len(observed),
+        "expected_token_count": len(expected_tokens),
+        "observed_token_count": len(observed_tokens),
+        "first_divergence": {
+            "character_index": character_index,
+            "token_index": min(expected_start, observed_start),
+            "type": {"delete": "removed", "insert": "added", "replace": "replaced"}.get(kind, kind),
+        },
+        "safe_snippets": snippets[:3],
+    }
+
+
+CLASSIC_SCRIPT_TYPES = {
+    "", "text/javascript", "application/javascript", "text/ecmascript",
+    "application/ecmascript", "litespeed/javascript",
+}
+SCRIPT_RELEVANT_ATTRIBUTES = (
+    "async", "defer", "nomodule", "integrity", "crossorigin", "referrerpolicy",
+)
+
+
+def canonical_script_type(node):
+    value = node.get("type", "").strip().lower()
+    return "classic" if value in CLASSIC_SCRIPT_TYPES else value
+
+
+def canonical_script_src(node):
+    source = node.get("src", "")
+    if not source and node.get("type", "").strip().lower() == "litespeed/javascript":
+        source = node.get("data-src") or node.get("data-lazy-src") or ""
+    return html.unescape(source)
+
+
+def script_relevant_attributes(node):
+    values = []
+    for name in SCRIPT_RELEVANT_ATTRIBUTES:
+        if name in {"async", "defer", "nomodule"}:
+            values.append((name, node.has_attr(name)))
+        else:
+            values.append((name, html.unescape(node.get(name, ""))))
+    return tuple(values)
+
+
+def script_signature(node):
+    return (canonical_script_src(node), canonical_script_type(node),
+            script_relevant_attributes(node), code_tokens(node.get_text()))
+
+
+def script_record(node, index):
+    if node is None:
+        return {"index": index, "presence": False}
+    tokens = code_tokens(node.get_text())
+    source = canonical_script_src(node)
+    parsed_source = urlsplit(source)
+    report_source = source
+    if parsed_source.scheme and parsed_source.netloc:
+        report_source = urlunsplit((parsed_source.scheme, parsed_source.hostname or "",
+                                    parsed_source.path, "", ""))
+    return {
+        "index": index,
+        "presence": True,
+        "type": node.get("type", ""),
+        "canonical_type": canonical_script_type(node),
+        "src": report_source,
+        "inline_length": len(node.get_text()),
+        "normalized_sha256": sha256_text("\x1f".join(tokens)),
+        "token_count": len(tokens),
+        "relevant_attributes": dict(script_relevant_attributes(node)),
+    }
+
+
+def script_diagnostics(expected_soup, observed_soup):
+    expected_nodes = expected_soup.select("script")
+    observed_nodes = observed_soup.select("script")
+    records = []
+    for index in range(max(len(expected_nodes), len(observed_nodes))):
+        expected = expected_nodes[index] if index < len(expected_nodes) else None
+        observed = observed_nodes[index] if index < len(observed_nodes) else None
+        expected_signature = script_signature(expected) if expected is not None else None
+        observed_signature = script_signature(observed) if observed is not None else None
+        differences = []
+        if expected is None or observed is None:
+            differences.append("presence")
+        else:
+            for name, left, right in zip(
+                    ("src", "type", "attributes", "code"),
+                    expected_signature, observed_signature):
+                if left != right:
+                    differences.append(name)
+        records.append({
+            "index": index,
+            "equivalent": expected_signature == observed_signature,
+            "differences": differences,
+            "expected": script_record(expected, index),
+            "observed": script_record(observed, index),
+        })
+    return records
+
+
 def css_tokens(value):
-    value = CSS_URL.sub(lambda match: "url(" + match.group(2).strip() + ")", value)
+    def quoted_url(match):
+        url = match.group(2).strip().replace("\\", "\\\\").replace('"', '\\"')
+        return 'url("' + url + '")'
+
+    value = CSS_URL.sub(quoted_url, value)
+    value = re.sub(r";\s*}", "}", value)
     return code_tokens(value)
+
+
+def is_css_image_url(value):
+    parsed = urlsplit(value)
+    path = unquote(parsed.path).lower()
+    return path.endswith(CSS_IMAGE_EXTENSIONS)
 
 
 def essential_classes(node):
@@ -139,15 +293,16 @@ def content_manifest(value):
         "attributes": required_attribute_counts(soup),
         "structure": structure_signature(soup),
         "forms": form_signature(soup),
-        "scripts": tuple((node.get("src", ""), node.get("type", ""), code_tokens(node.get_text()))
-                         for node in soup.select("script")),
+        "scripts": tuple(script_signature(node) for node in soup.select("script")),
         "styles": tuple(css_tokens(node.get_text()) for node in soup.select("style")),
     }
 
 
 def compare_rendered_content(approved, rendered):
-    expected = content_manifest(approved)
-    actual = content_manifest(rendered)
+    expected_soup = parse_fragment(approved)
+    actual_soup = parse_fragment(rendered)
+    expected = content_manifest(expected_soup)
+    actual = content_manifest(actual_soup)
     failures = []
     for key in ("text", "headings", "links", "buttons", "ids", "structure",
                 "forms", "scripts", "styles"):
@@ -157,9 +312,15 @@ def compare_rendered_content(approved, rendered):
         failures.append("essential_classes")
     if expected["attributes"] - actual["attributes"]:
         failures.append("aria_or_data_attributes")
+    diagnostics = {}
+    if "text" in failures:
+        diagnostics["text"] = text_diagnostics(expected["text"], actual["text"])
+    if "scripts" in failures:
+        diagnostics["scripts"] = script_diagnostics(expected_soup, actual_soup)
     return {
         "preserved": not failures,
         "failures": failures,
+        "diagnostics": diagnostics,
         "expected": {
             "headings": len(expected["headings"]), "links": len(expected["links"]),
             "forms": len(expected["forms"]), "scripts": len(expected["scripts"]),
@@ -179,7 +340,25 @@ def css_urls(soup):
         values.extend(match[1].strip() for match in CSS_URL.findall(node.get("style", "")))
     for node in soup.select("style"):
         values.extend(match[1].strip() for match in CSS_URL.findall(node.get_text()))
-    return [html.unescape(value) for value in values if value and not value.lower().startswith("data:")]
+    return [html.unescape(value) for value in values
+            if value and not value.lower().startswith("data:") and is_css_image_url(value)]
+
+
+def css_url_entries(soup):
+    entries = []
+    for index, node in enumerate(soup.select("[style]")):
+        for match in CSS_URL.findall(node.get("style", "")):
+            value = html.unescape(match[1].strip())
+            if (value and not value.lower().startswith("data:")
+                    and is_css_image_url(value)):
+                entries.append((value, f"{node.name}[style]:{index}"))
+    for index, node in enumerate(soup.select("style")):
+        for match in CSS_URL.findall(node.get_text()):
+            value = html.unescape(match[1].strip())
+            if (value and not value.lower().startswith("data:")
+                    and is_css_image_url(value)):
+                entries.append((value, f"style:{index}"))
+    return entries
 
 
 def editorial_image_entries(value, rendered=False):
@@ -264,6 +443,7 @@ def compare_rendered_images(approved, rendered):
 
     approved_urls = [entry[1] for entry in expected] + expected_css
     derived_http_urls = []
+    probe_targets = []
     rendered_soup = parse_fragment(rendered)
     expected_nodes = parse_fragment(approved).select("img, source")
     actual_nodes = rendered_soup.select("img, source")
@@ -271,13 +451,43 @@ def compare_rendered_images(approved, rendered):
         failures.append("image_element_count")
     for index, node in enumerate(actual_nodes):
         source = html.unescape(node.get("src", ""))
+        logical_source = source
+        source_attribute = "src"
         if source.lower().startswith("data:") and not safe_svg_placeholder(source):
             failures.append(f"unsafe_placeholder:{index}")
+        if source.lower().startswith("data:"):
+            logical_source = html.unescape(node.get("data-src") or node.get("data-lazy-src") or "")
+            source_attribute = "data-src" if node.get("data-src") else "data-lazy-src"
+        if logical_source.startswith(("http://", "https://")):
+            probe_targets.append({
+                "url": logical_source,
+                "classification": "LiteSpeed" if source_attribute != "src" else "primary",
+                "source": f"{node.name}[{index}].{source_attribute}",
+                "in_stored_content": logical_source in approved_urls,
+            })
         for attribute in ("srcset", "data-srcset", "data-lazy-srcset"):
             for candidate in parse_srcset(node.get(attribute, "")):
                 derived_http_urls.append(candidate)
+                probe_targets.append({
+                    "url": candidate,
+                    "classification": "LiteSpeed" if attribute != "srcset" else "srcset",
+                    "source": f"{node.name}[{index}].{attribute}",
+                    "in_stored_content": candidate in approved_urls,
+                })
                 if not valid_derived_url(candidate, approved_urls):
                     failures.append(f"invalid_derived_url:{index}:{attribute}")
+    for value, source in css_url_entries(rendered_soup):
+        if value.startswith(("http://", "https://")):
+            probe_targets.append({
+                "url": value, "classification": "CSS", "source": source,
+                "in_stored_content": value in approved_urls,
+            })
+    unique_targets = []
+    seen_targets = set()
+    for target in probe_targets:
+        if target["url"] not in seen_targets:
+            unique_targets.append(target)
+            seen_targets.add(target["url"])
     return {
         "primary_preserved": expected == actual and expected_css == actual_css,
         "derived_valid": not any(item.startswith(("unsafe_placeholder", "invalid_derived_url"))
@@ -290,4 +500,5 @@ def compare_rendered_images(approved, rendered):
             + [url for url in actual_css if url.startswith("https://")]
         )),
         "derived_http_urls": sorted(set(derived_http_urls)),
+        "probe_targets": unique_targets,
     }
