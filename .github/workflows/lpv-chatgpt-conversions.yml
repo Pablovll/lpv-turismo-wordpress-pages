@@ -25,5 +25,22 @@ jobs:
         run: |
           php wordpress/lpv-chatgpt-conversions/tests/core-test.php
           php wordpress/lpv-chatgpt-conversions/tests/adapter-test.php
+          php wordpress/lpv-chatgpt-conversions/tests/secrets-test.php
       - name: Browser helper checks
         run: node --test wordpress/lpv-chatgpt-conversions/tests/browser-test.cjs
+      - name: Prepare installable plugin folder
+        run: |
+          mkdir -p package/lpv-chatgpt-conversions
+          cp wordpress/lpv-chatgpt-conversions/lpv-chatgpt-conversions.php package/lpv-chatgpt-conversions/
+          cp wordpress/lpv-chatgpt-conversions/README.md package/lpv-chatgpt-conversions/
+          cp -R wordpress/lpv-chatgpt-conversions/includes package/lpv-chatgpt-conversions/
+          cp -R wordpress/lpv-chatgpt-conversions/assets package/lpv-chatgpt-conversions/
+          test -f package/lpv-chatgpt-conversions/includes/secrets.php
+          test ! -d package/lpv-chatgpt-conversions/tests
+      - name: Upload WordPress-installable ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: lpv-chatgpt-conversions-0.2.0
+          path: package/
+          retention-days: 30
+          if-no-files-found: error

@@ -1,6 +1,6 @@
 # LPV ChatGPT Conversions
 
-- Version: 0.1.0
+- Version: 0.2.0
 - Date: 2026-11-17
 - Owner: Pablo Vallasciani / LPV Turismo
 - Status: implementation candidate; NOT installed, activated, or verified against a live ad account.
@@ -23,23 +23,23 @@ Forms observed in the connected WordPress site on 2026-11-17:
 
 Published WordPress content is newer than main in the repository. Do not replace current pages with repository HTML to deploy this integration.
 
-## Configuration
+## Install and configure from WordPress (no server-file editing)
 
-The plugin is inert by default. Configure secrets privately on the host; never put a real API key in this repository, page HTML, browser script, screenshots, issues or chat.
+The installable ZIP is generated as the GitHub Actions artifact **lpv-chatgpt-conversions-0.2.0**. Its root contains the lpv-chatgpt-conversions folder; do not upload the repository source ZIP as a plugin.
 
-Example placeholders for wp-config.php, before its stop-editing line:
+1. Back up WordPress and install the plugin ZIP using **Plugins -> Add New -> Upload Plugin -> Install Now -> Activate**.
+2. Open **Settings -> LPV — ChatGPT Ads**.
+3. The Pixel ID for the existing LPV web source "campanha 1" is prefilled: **RhD2bsVtU7zYjLxg3Z2KGq**. Verify that it is still the intended source in the same advertiser account.
+4. Paste the CAPI key privately into the password field. Save configuration with all three activation/privacy/live boxes unchecked.
+5. The key is encrypted using AES-256-GCM with a fresh random nonce and a key derived from private WordPress salts; it is stored in a non-autoloaded WordPress option. It is never rendered back into HTML, JavaScript or the REST API. If OpenSSL is unavailable, saving a new key fails closed. Salt rotation requires re-entering the key. Server administrators with code access can still use the key; encryption is not a substitute for protecting the host and backups.
+6. Click **Test connection without recording a conversion**. This sends one synthetic event with validate_only=true, no customer data, and no FormSubmit email. The resulting HTTP acceptance tests the source/key connection, not complete instrumentation or ad attribution.
+7. Leave the integration disabled until the privacy update and form QA are complete. Activating the WordPress plugin alone does not enable measurement.
 
-~~~php
-define('LPV_ADS_ENABLED', false);
-define('LPV_ADS_PRIVACY_READY', false);
-define('LPV_ADS_PIXEL_ID', getenv('LPV_ADS_PIXEL_ID') ?: '');
-define('LPV_ADS_CAPI_KEY', getenv('LPV_ADS_CAPI_KEY') ?: '');
-define('LPV_ADS_VALIDATE_ONLY', true);
-~~~
+Only administrators with manage_options can open, save or test these settings. Save and test are protected by separate WordPress nonces. A blank key field preserves the saved key; a separate checkbox explicitly removes it. Never paste real keys into chat, GitHub, screenshots or page contents.
 
-Host environment variables are an option only if supported by the actual hosting setup. Otherwise enter real values privately in protected server-side configuration. The Conversions API key is separate from a model/API-platform key. No LLM credits are needed by this plugin.
+Technical constants remain supported and take priority if they are already defined: LPV_ADS_ENABLED, LPV_ADS_PRIVACY_READY, LPV_ADS_PIXEL_ID, LPV_ADS_CAPI_KEY, LPV_ADS_VALIDATE_ONLY. The settings screen flags each override without revealing its value. Do not add these constants for the panel-based installation.
 
-The Pixel ID identifies the source even though this implementation does not install the browser Pixel. Reuse an existing suitable source in the same advertiser account instead of creating duplicates. The source's internal id used in event settings is different from pixel_id.
+This is the Conversions API key from **Ads Manager -> Conversions**, separate from an OpenAI model/API-platform key.
 
 ## What happens when enabled
 
@@ -59,14 +59,14 @@ The baseline plugin list includes Site Kit; this plugin does not alter Google ta
 
 ## Validation and activation
 
-1. Back up the site and plugins. Install this folder as wp-content/plugins/lpv-chatgpt-conversions using the existing controlled deployment procedure; keep ENABLED=false.
+1. Back up the site and plugins. Install this folder as wp-content/plugins/lpv-chatgpt-conversions using the existing controlled deployment procedure; keep the integration unchecked in its settings.
 2. Create/reuse a web source in Ads Manager -> Conversions and privately provision its CAPI key.
 3. Review the draft privacy addendum in docs/chatgpt-ads-privacy-addendum-v0.1.md and update the approved public policy with version/date before enabling measurement. PRIVACY_READY is an explicit deployment gate, not a claim of legal review.
 4. Verify the FormSubmit address/activation in the real account. A live provider relay has NOT been tested in this change.
-5. Set ENABLED=true and PRIVACY_READY=true only in an isolated QA environment with provider HTTP mocked, while keeping VALIDATE_ONLY=true. If production is the only environment, do not perform real test-email submissions without a separately agreed test recipient/workflow.
+5. Check integration enabled and privacy reviewed only in an isolated QA environment with provider HTTP mocked, while keeping live conversion recording unchecked. If production is the only environment, do not perform real test-email submissions without a separately agreed test recipient/workflow.
 6. Run offline tests below. With the real source/key available, send a synthetic, non-customer event directly with validate_only=true. A validation-only event does not appear in recent-event monitoring.
 7. Check decline/accept/withdrawal behavior, all three languages, disabled product fields, errors, session expiration and original native fallback. Confirm there is no API key or personal form data in browser telemetry.
-8. After review and an agreed live-test procedure, change VALIDATE_ONLY=false for future real submissions. Previously queued validation events are discarded on a mode change.
+8. After review and an agreed live-test procedure, check live conversion recording for future real submissions. Previously queued validation events are discarded on a mode change.
 9. Define lead_created as a conversion setting on that source and attach the setting to the intended campaign. Do not change objective, budget or activate an ad as part of instrumentation.
 10. Verify one agreed conversion in source event diagnostics, separately from ad attribution. Reception does not guarantee it is attributable to an ad. Verify campaign/date window independently.
 
@@ -81,6 +81,7 @@ php -l lpv-chatgpt-conversions.php
 php -l includes/core.php
 php tests/core-test.php
 php tests/adapter-test.php
+php tests/secrets-test.php
 node --test tests/browser-test.cjs
 ~~~
 
@@ -102,7 +103,7 @@ A GitHub Actions workflow runs these checks on the review branch/PR. No credenti
 
 ## Rollback
 
-Set LPV_ADS_ENABLED=false and purge LiteSpeed/page caches, then deactivate the plugin through the established deployment procedure. Existing form action attributes and published content do not need to be restored. Inspect any queued items before re-enabling; do not replay test events as live conversions.
+Uncheck integration enabled (or set LPV_ADS_ENABLED=false if using constants) and purge LiteSpeed/page caches, then deactivate the plugin through the established deployment procedure. Existing form action attributes and published content do not need to be restored. Inspect any queued items before re-enabling; do not replay test events as live conversions.
 
 ## Primary references
 

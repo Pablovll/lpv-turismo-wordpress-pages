@@ -138,4 +138,40 @@ $before_schedule = count($scheduled);
 $plugin->send($last);
 check($options[$last]['status'] === 'failed', 'Invalid credentials stop retries');
 check(count($scheduled) === $before_schedule, 'Permanent CAPI failure not rescheduled');
+
+// Admin UI uses a write-only password input; no existing key is rendered.
+function current_user_can($capability) { global $is_admin_user; return $is_admin_user; }
+function get_current_user_id() { return 1; }
+function delete_transient($key) { global $transients; unset($transients[$key]); }
+function admin_url($path) { return 'https://www.lpvturismo.com/wp-admin/' . $path; }
+function esc_html($value) { return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8'); }
+function esc_attr($value) { return esc_html($value); }
+function esc_url($value) { return esc_html($value); }
+function wp_nonce_field($action) { echo '<input type="hidden" name="_wpnonce" value="test-nonce">'; }
+$is_admin_user = false;
+ob_start(); $plugin->admin_page(); $html = ob_get_clean();
+check($html === '', 'Unauthorized user cannot view the settings');
+$is_admin_user = true;
+ob_start(); $plugin->admin_page(); $html = ob_get_clean();
+check(strpos($html, 'unit-test-not-a-real-key') === false, 'Existing secret never rendered');
+check(strpos($html, 'name="lpv_ads[key]" type="password" value=""') !== false, 'Password input is always empty');
+check(substr_count($html, 'name="_wpnonce"') === 2, 'Save and validation have separate nonces');
+$before_http = count($requests);
+$settings = $plugin->settings_from_input(['pixel' => 'RhD2bsVtU7zYjLxg3Z2KGq', 'key' => 'test-only-admin-key']);
+check($settings['enabled'] === false && $settings['validate'] === true && $settings['privacy_ready'] === false, 'Saving credentials leaves measurement off');
+check(strpos(json_encode($settings), 'test-only-admin-key') === false, 'Saved settings contain no cleartext key');
+$options['lpv_ads_settings'] = $settings;
+$again = $plugin->settings_from_input(['pixel' => 'RhD2bsVtU7zYjLxg3Z2KGq', 'key' => '']);
+check($again['encrypted_key'] === $settings['encrypted_key'], 'Blank key preserves existing protected value');
+$removed = $plugin->settings_from_input(['pixel' => 'RhD2bsVtU7zYjLxg3Z2KGq', 'key' => '', 'delete_key' => '1']);
+check(!isset($removed['encrypted_key']), 'Explicit removal deletes saved key');
+check(count($requests) === $before_http, 'Saving credentials sends no third-party request');
+foreach ([
+    ['pixel' => 'bad pixel', 'key' => ''],
+    ['pixel' => 'pixel', 'key' => "bad\nkey"],
+    ['pixel' => ['array'], 'key' => ''],
+] as $invalid_settings) {
+    try { $plugin->settings_from_input($invalid_settings); throw new RuntimeException('Invalid settings accepted'); }
+    catch (InvalidArgumentException $e) { check(true, 'Invalid settings rejected safely'); }
+}
 echo "Adapter: {$count} assertions passed.\n";

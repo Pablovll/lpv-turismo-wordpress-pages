@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LPV ChatGPT Conversions
  * Description: Confirmed FormSubmit leads to OpenAI CAPI, with optional visitor consent.
- * Version: 0.1.0
+ * Version: 0.2.0
  * Requires PHP: 7.4
  * Requires at least: 6.2
  * Author: LPV Turismo
@@ -11,9 +11,10 @@ namespace LPV\ChatGPTAds;
 
 if (!defined('ABSPATH')) { exit; }
 require_once __DIR__ . '/includes/core.php';
+require_once __DIR__ . '/includes/secrets.php';
 
 final class Plugin {
-    const VERSION = '0.1.0';
+    const VERSION = '0.2.0';
     const CLEANUP = 'lpv_ads_cleanup';
     const SEND = 'lpv_ads_send_event';
     const RECEIPTS = 'lpv_ads_receipt_';
@@ -25,16 +26,47 @@ final class Plugin {
         add_action(self::SEND, [$this, 'send'], 10, 1);
         add_action(self::CLEANUP, [$this, 'cleanup']);
         add_action('admin_menu', [$this, 'admin_menu']);
+        add_action('admin_post_lpv_ads_save', [$this, 'save_settings']);
+        add_action('admin_post_lpv_ads_validate', [$this, 'validate_credentials']);
+    }
+
+    private function settings() {
+        $settings = get_option('lpv_ads_settings');
+        return is_array($settings) ? $settings : [];
+    }
+
+    private function secret_salt() {
+        return wp_salt('auth') . wp_salt('secure_auth');
     }
 
     public function config() {
+        $saved = $this->settings();
         return [
-            'enabled' => defined('LPV_ADS_ENABLED') && LPV_ADS_ENABLED === true,
-            'privacy_ready' => defined('LPV_ADS_PRIVACY_READY') && LPV_ADS_PRIVACY_READY === true,
-            'pixel' => defined('LPV_ADS_PIXEL_ID') ? (string) LPV_ADS_PIXEL_ID : '',
-            'key' => defined('LPV_ADS_CAPI_KEY') ? (string) LPV_ADS_CAPI_KEY : '',
-            'validate' => !defined('LPV_ADS_VALIDATE_ONLY') || LPV_ADS_VALIDATE_ONLY !== false,
+            'enabled' => defined('LPV_ADS_ENABLED') ? LPV_ADS_ENABLED === true : !empty($saved['enabled']),
+            'privacy_ready' => defined('LPV_ADS_PRIVACY_READY') ? LPV_ADS_PRIVACY_READY === true : !empty($saved['privacy_ready']),
+            'pixel' => defined('LPV_ADS_PIXEL_ID') ? (string) LPV_ADS_PIXEL_ID : ($saved['pixel'] ?? 'RhD2bsVtU7zYjLxg3Z2KGq'),
+            'key' => defined('LPV_ADS_CAPI_KEY') ? (string) LPV_ADS_CAPI_KEY : Secrets::decrypt($saved['encrypted_key'] ?? '', $this->secret_salt()),
+            'validate' => defined('LPV_ADS_VALIDATE_ONLY') ? LPV_ADS_VALIDATE_ONLY !== false : ($saved['validate'] ?? true) !== false,
         ];
+    }
+
+    public function settings_from_input($input) {
+        if (!is_array($input)) { throw new \InvalidArgumentException('invalid_settings'); }
+        $saved = $this->settings();
+        $pixel = $input['pixel'] ?? '';
+        $key = $input['key'] ?? '';
+        if (!is_string($pixel) || !preg_match('/^[A-Za-z0-9_-]{1,200}$/D', $pixel)
+            || !is_string($key) || strlen($key) > 4096 || preg_match('/[\x00-\x20\x7f]/', $key)) {
+            throw new \InvalidArgumentException('invalid_settings');
+        }
+        $saved['pixel'] = $pixel;
+        // Saving a blank password input preserves the existing protected key.
+        if (!empty($input['delete_key'])) { unset($saved['encrypted_key']); }
+        elseif ($key !== '') { $saved['encrypted_key'] = Secrets::encrypt($key, $this->secret_salt()); }
+        $saved['enabled'] = !empty($input['enabled']);
+        $saved['privacy_ready'] = !empty($input['privacy_ready']);
+        $saved['validate'] = empty($input['live']);
+        return $saved;
     }
 
     public function ready() {
@@ -238,24 +270,102 @@ final class Plugin {
     }
 
     public function admin_menu() {
-        add_management_page('LPV — ChatGPT Ads', 'LPV — ChatGPT Ads', 'manage_options', 'lpv-chatgpt-ads', [$this, 'admin_page']);
+        add_options_page('LPV — ChatGPT Ads', 'LPV — ChatGPT Ads', 'manage_options', 'lpv-chatgpt-ads', [$this, 'admin_page']);
+    }
+
+    public function save_settings() {
+        if (!current_user_can('manage_options')) { wp_die('Acesso negado.', '', ['response' => 403]); }
+        check_admin_referer('lpv_ads_save');
+        try {
+            $input = isset($_POST['lpv_ads']) ? wp_unslash($_POST['lpv_ads']) : [];
+            update_option('lpv_ads_settings', $this->settings_from_input($input), false);
+            set_transient('lpv_ads_admin_notice_' . get_current_user_id(), 'Configuração salva. A chave não será exibida novamente.', MINUTE_IN_SECONDS);
+        } catch (\Exception $e) {
+            set_transient('lpv_ads_admin_notice_' . get_current_user_id(), 'Não foi possível salvar. Confira o Pixel ID e o formato da chave; verifique se a hospedagem oferece OpenSSL AES-GCM.', MINUTE_IN_SECONDS);
+        }
+        wp_safe_redirect(admin_url('options-general.php?page=lpv-chatgpt-ads'));
+        exit;
+    }
+
+    public function validate_credentials() {
+        if (!current_user_can('manage_options')) { wp_die('Acesso negado.', '', ['response' => 403]); }
+        check_admin_referer('lpv_ads_validate');
+        $config = $this->config();
+        if ($config['pixel'] === '' || $config['key'] === '') {
+            $message = 'Salve o Pixel ID e a chave CAPI antes de testar.';
+        } else {
+            // This test never reads a customer form or records a live conversion.
+            $response = wp_remote_post('https://bzr.openai.com/v1/events?pid=' . rawurlencode($config['pixel']), [
+                'timeout' => 15, 'redirection' => 0, 'limit_response_size' => 32768,
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer ' . $config['key'],
+                ],
+                'body' => wp_json_encode([
+                    'validate_only' => true,
+                    'events' => [[
+                        'id' => 'lpv_validation_' . wp_generate_uuid4(),
+                        'type' => 'lead_created',
+                        'timestamp_ms' => (int) floor(microtime(true) * 1000),
+                        'action_source' => 'web',
+                        'source_url' => home_url('/quero-montar-meu-roteiro/'),
+                        'data' => ['type' => 'customer_action'],
+                    ]],
+                ]),
+                'data_format' => 'body',
+            ]);
+            $code = is_wp_error($response) ? 0 : (int) wp_remote_retrieve_response_code($response);
+            $message = ($code >= 200 && $code < 300)
+                ? 'Validação aceita pela API. Nenhuma conversão real foi registrada. Isto ainda não testa o formulário nem a atribuição ao anúncio.'
+                : 'A validação não foi aceita. Confira se a chave é da CAPI do Gerenciador de Anúncios e pertence à mesma conta do Pixel ID. Código HTTP: ' . $code . '.';
+        }
+        // Never store or render the upstream response, which may include sensitive diagnostics.
+        set_transient('lpv_ads_admin_notice_' . get_current_user_id(), $message, MINUTE_IN_SECONDS);
+        wp_safe_redirect(admin_url('options-general.php?page=lpv-chatgpt-ads'));
+        exit;
     }
 
     public function admin_page() {
         if (!current_user_can('manage_options')) { return; }
         $config = $this->config();
         echo '<div class="wrap"><h1>LPV — ChatGPT Ads</h1>';
-        echo '<p>Versão 0.1.0. Integração de solicitações recebidas pelo FormSubmit.</p><ul>';
-        foreach ([
-            'Integração habilitada' => $config['enabled'],
-            'Privacidade revisada' => $config['privacy_ready'],
-            'Pixel ID configurado' => $config['pixel'] !== '',
-            'Chave CAPI configurada' => $config['key'] !== '',
-            'Somente validação (não registra conversões)' => $config['validate'],
-        ] as $label => $value) {
-            echo '<li>' . esc_html($label) . ': ' . ($value ? 'Sim' : 'Não') . '</li>';
+        echo '<p>Versão ' . esc_html(self::VERSION) . '. Primeiro salve a chave e teste a conexão. Deixe a integração desativada até concluir a revisão.</p>';
+        $notice_key = 'lpv_ads_admin_notice_' . get_current_user_id();
+        $notice = get_transient($notice_key);
+        if (is_string($notice) && $notice !== '') {
+            echo '<div class="notice notice-info"><p>' . esc_html($notice) . '</p></div>';
+            delete_transient($notice_key);
         }
-        echo '</ul><p>A chave nunca é exibida. Consulte o README do plugin para configuração e testes.</p></div>';
+        if (!Secrets::available()) {
+            echo '<div class="notice notice-error"><p>A hospedagem precisa oferecer OpenSSL AES-GCM para guardar a chave pelo painel. Nenhuma chave será gravada sem essa proteção.</p></div>';
+        }
+        echo '<p>Chave CAPI: <strong>' . ($config['key'] !== '' ? 'configurada' : 'não configurada') . '</strong>. Salvar a chave não envia dados de visitantes.</p>';
+        foreach (['LPV_ADS_ENABLED', 'LPV_ADS_PRIVACY_READY', 'LPV_ADS_PIXEL_ID', 'LPV_ADS_CAPI_KEY', 'LPV_ADS_VALIDATE_ONLY'] as $constant) {
+            if (defined($constant)) {
+                echo '<p><strong>Configuração técnica existente:</strong> ' . esc_html($constant) . ' tem prioridade sobre o painel. Peça ao responsável técnico para revisar essa definição.</p>';
+            }
+        }
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+        echo '<input type="hidden" name="action" value="lpv_ads_save">';
+        wp_nonce_field('lpv_ads_save');
+        echo '<table class="form-table"><tr><th><label for="lpv-ads-pixel">Pixel ID</label></th><td>';
+        echo '<input class="regular-text" id="lpv-ads-pixel" name="lpv_ads[pixel]" type="text" value="' . esc_attr($config['pixel']) . '" required></td></tr>';
+        echo '<tr><th><label for="lpv-ads-key">Chave CAPI</label></th><td>';
+        echo '<input class="regular-text" id="lpv-ads-key" name="lpv_ads[key]" type="password" value="" autocomplete="new-password" spellcheck="false">';
+        echo '<p class="description">Cole aqui a chave gerada no Gerenciador de Anúncios. Se já estiver configurada, deixe em branco para manter. A chave é criptografada no banco de dados deste WordPress.</p>';
+        echo '<label><input type="checkbox" name="lpv_ads[delete_key]" value="1"> Remover a chave salva no painel</label></td></tr></table>';
+        foreach ([
+            'enabled' => ['Ativar integração no site', $config['enabled']],
+            'privacy_ready' => ['A atualização de privacidade foi revisada e publicada', $config['privacy_ready']],
+            'live' => ['Registrar conversões reais (deixe desmarcado durante a configuração)', !$config['validate']],
+        ] as $name => $field) {
+            echo '<p><label><input type="checkbox" name="lpv_ads[' . esc_attr($name) . ']" value="1"' . ($field[1] ? ' checked' : '') . '> ' . esc_html($field[0]) . '</label></p>';
+        }
+        echo '<p><button class="button button-primary" type="submit">Salvar configuração</button></p></form>';
+        echo '<hr><h2>Testar a conexão</h2><p>Envia apenas um exemplo técnico sem dados de clientes, em modo de validação. Não envia formulário nem registra conversão real.</p>';
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="lpv_ads_validate">';
+        wp_nonce_field('lpv_ads_validate');
+        echo '<button class="button" type="submit">Testar conexão sem registrar conversão</button></form></div>';
     }
 
     public function cleanup() {
