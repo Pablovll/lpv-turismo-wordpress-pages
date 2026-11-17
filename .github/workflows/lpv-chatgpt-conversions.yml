@@ -1,0 +1,29 @@
+name: LPV ChatGPT conversion integration
+on:
+  push:
+    branches: [codex/chatgpt-conversions-20261117]
+    paths:
+      - wordpress/lpv-chatgpt-conversions/**
+      - .github/workflows/lpv-chatgpt-conversions.yml
+  pull_request:
+    paths:
+      - wordpress/lpv-chatgpt-conversions/**
+      - .github/workflows/lpv-chatgpt-conversions.yml
+permissions:
+  contents: read
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: PHP syntax
+        run: find wordpress/lpv-chatgpt-conversions -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Confirmed submissions, consent, idempotency, retries and data minimization
+        run: |
+          php wordpress/lpv-chatgpt-conversions/tests/core-test.php
+          php wordpress/lpv-chatgpt-conversions/tests/adapter-test.php
+      - name: Browser helper checks
+        run: node --test wordpress/lpv-chatgpt-conversions/tests/browser-test.cjs
